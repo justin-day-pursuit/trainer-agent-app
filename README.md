@@ -1,2 +1,191 @@
-# trainer-agent-app
-Agentic App to help Fitness Trainers
+# Trainer Progression App
+
+> **A mobile-first, agentic web application designed for independent personal trainers to automate weekly workout progression drafting and capture frictionless in-gym voice and chat logs from clients.**
+
+---
+
+## 🏋️‍♂️ Problem & Vision
+
+Independent personal trainers lose hours every weekend manually rebuilding client workout spreadsheets, copying rows, and calculating load progressions from memory. Existing tools like Trainerize force repetitive, workout-by-workout editing and trap client data behind escalating subscription fees.
+
+The **Trainer Progression App** solves manual programming fatigue through a decoupled, human-in-the-loop multi-agent architecture:
+1. **Frictionless Client Logging**: Clients dictate or text their completed sets, reps, and feedback directly on their phone using a unique session link (no tedious account creation or tiny form-tapping with sweaty hands).
+2. **Deterministic Progression Engine**: A standalone, swappable math engine calculates baseline weight changes (e.g., hit all target reps $\to +5\text{ lbs}$; missed reps $\to$ hold weight).
+3. **AI Safety & Safety Cross-Checking**: Dedicated agents review completed logs and intake profiles, cross-checking proposed progressions against past injuries or pain flags.
+4. **Trainer Decides**: The trainer reviews AI-drafted programs on a clean dashboard, reviews safety badges, and hits **Approve**—instantly pushing next week's plan to the client's phone.
+
+---
+
+## 🏛️ Architecture Overview
+
+The application is structured as a decoupled monorepo split into a **mobile-optimized Next.js frontend** and a **FastAPI backend**:
+
+```
++-------------------------------------------------------------+
+|                     CLIENT MOBILE BROWSER                   |
+|  - Accesses unique session URL: /s/:sessionToken            |
+|  - Conversational voice/chat logging (Agent 1)              |
+|  - Week-over-week progress viewer                           |
+|  - In-browser localStorage crash recovery                   |
++------------------------------+------------------------------+
+                               |
+                               | HTTPS / JSON
+                               v
++-------------------------------------------------------------+
+|                     TRAINER DASHBOARD                       |
+|  - Protected by Supabase Auth (/trainer)                    |
+|  - Review queue for draft progressions (Agent 2)            |
+|  - AI safety alerts & triage feed (Agent 3)                 |
+|  - 1-click plan approval (Human-in-the-Loop)                |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                    FRONTEND (Next.js / Vercel)              |
+|  - TypeScript + Tailwind CSS (Mobile-First)                 |
+|  - Supabase JS Client (Trainer sign-in only)                |
+|  - Dedicated scrollable data containers                     |
++------------------------------+------------------------------+
+                               |
+                               | REST API
+                               v
++-------------------------------------------------------------+
+|                    BACKEND (FastAPI / Render)               |
+|  - FastAPI + Uvicorn + Pydantic v2 Settings                 |
+|  - SQLAlchemy 2.0 (Async) + Psycopg + Alembic               |
+|  - PyJWT Supabase Token Verification                        |
+|  - Anthropic Claude API via HTTPX                           |
+|  - Modular Deterministic Progression Engine (Protocol)      |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                    DATA & AUTH (Supabase)                   |
+|  - Supabase PostgreSQL (Async connection pool)              |
+|  - Supabase Auth (Trainer accounts only)                    |
+|  - Unique UUID ClientSession tokens                         |
++-------------------------------------------------------------+
+```
+
+---
+
+## 🤖 The 3-Agent System
+
+| Agent | Responsibility | Trigger | Permissions & Safeguards |
+| :--- | :--- | :--- | :--- |
+| **Agent 1: Client Intake & Logging** | Converses with clients during intake; parses conversational chat/voice logs into structured set rows (`exercise_id`, `weight_lbs`, `reps`, `pain_flag`). | On-demand (client sends a message or submits a workout note). | **Read**: Client profile & prescribed workout.<br>**Write**: Extracted sets, pain notes, intake data.<br>**Safeguard**: Never changes workout plans; inline confirmation allows client 1-tap edits. |
+| **Agent 2: Progression & Plan Generator** | Reads deterministic progression engine output, cross-references client injury profile and recent pain flags, and drafts next week's personalized program. | Scheduled / Trainer-initiated weekend batch. | **Read**: Completed logs, progression engine output, injury history.<br>**Write**: Draft workout plans to trainer review queue.<br>**Safeguard**: Read-only; never communicates directly with clients; requires trainer approval. |
+| **Agent 3: Trainer Assistant & Monitor** | Monitors client adherence, detects missed workouts or declining engagement, prepares triage alert cards, and drafts personalized check-in messages. | Scheduled daily / Trainer dashboard query. | **Read**: All client profiles, logs, and historical trends.<br>**Write**: Alert records and draft messages to trainer dashboard.<br>**Safeguard**: Cannot send messages or edit plans without explicit trainer approval. |
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend (`frontend/`)
+- **Framework**: Next.js 15+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS (mobile-first breakpoints, safe-area padding, touch targets $\ge 44\text{px}$)
+- **Auth**: `@supabase/supabase-js` (Trainer sign-in only)
+- **Icons**: `lucide-react`
+- **Deployment**: Vercel
+
+### Backend (`backend/`)
+- **Framework**: FastAPI + Uvicorn
+- **Language**: Python 3.10+
+- **Database & ORM**: SQLAlchemy 2.0 (asyncio) + `psycopg` (binary) + Alembic
+- **Validation**: Pydantic v2 + `pydantic-settings`
+- **Auth Verification**: `PyJWT` (verifies Supabase tokens)
+- **AI Integrations**: `httpx` (HTTP calls to Anthropic Claude API)
+- **Dev & Test**: `pytest`, `pytest-asyncio`, `ruff`
+- **Deployment**: Render (Docker)
+
+---
+
+## 🚀 Quickstart Guide
+
+### 1. Clone the Repository
+```bash
+git clone git@github-pursuit:justin-day-pursuit/trainer-agent-app.git
+cd trainer-agent-app
+```
+
+### 2. Environment Variables Setup
+Copy the environment templates in both `backend` and `frontend`:
+```bash
+# Backend environment setup
+cp backend/.env.example backend/.env
+
+# Frontend environment setup
+cp frontend/.env.example frontend/.env
+```
+Open each `.env` file and insert your Supabase project credentials and Anthropic API key.
+
+---
+
+### 3. Backend Setup & Run
+
+#### Option A: Using `uv` (Recommended)
+```bash
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload --port 8000
+```
+
+#### Option B: Using standard Python `venv`
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+uvicorn app.main:app --reload --port 8000
+```
+
+Backend will be live at `http://localhost:8000`. Test the health endpoint:
+```bash
+curl http://localhost:8000/health
+# {"status":"ok","environment":"development"}
+```
+
+Run backend tests:
+```bash
+pytest tests/ -v
+```
+
+---
+
+### 4. Frontend Setup & Run
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Frontend will be live at `http://localhost:3000`.
+
+- **Client Mobile Flow**: Navigate to `http://localhost:3000` and enter a session link or navigate to `/s/demo-client-session`.
+- **Trainer Dashboard**: Navigate to `http://localhost:3000/trainer`.
+
+---
+
+### 5. Running with Docker Compose (Optional Local DB)
+If you prefer running a local PostgreSQL instance:
+```bash
+cd backend
+docker-compose up -d
+```
+
+---
+
+## ⏸️ Deferred Features (Post-MVP)
+In line with project scope guidelines, the following capabilities are architected as interfaces but deferred from immediate implementation:
+- Complex charting and visualization suites
+- Heavy 3rd-party UI component libraries (retained clean Tailwind primitives)
+- Distributed background job queues (Celery/Redis)
+- Automated outbound SMS / push notifications
+- External autonomous agent tools beyond internal model reasoning
+
+---
+
+## 📖 Team & Agent Documentation
+- [`team-reference.md`](./team-reference.md): Living team work log, active tasks, open decisions, and fresh clone onboarding instructions.
+- [`agents.md`](./agents.md): Agent engineering doctrine, harness specifications, prompt injection defenses, eval cards, and permission boundaries.
+- [`CLAUDE.md`](./CLAUDE.md): Direct instructions and quick rules for Claude Code and CLI users.
