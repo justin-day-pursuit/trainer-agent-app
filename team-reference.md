@@ -21,6 +21,7 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 ### ✅ What Has Been Done
 - [x] **Project Scaffolding**: Initialized decoupled monorepo architecture with Next.js (App Router) on the frontend and FastAPI on the backend.
 - [x] **Documentation & Architecture Standards**: Established `README.md`, `team-reference.md`, `agents.md`, and `CLAUDE.md`.
+- [x] **Comprehensive Project Documentation (`documents/`)**: Authored 8 foundational reference manuals covering project scope, refined PRD with eval cards, visual user flows (Mermaid), database schema with ER diagram, REST API reference, technology stack ADRs, security & safety threat models, and cloud deployment guide.
 - [x] **Environment & Secret Hygiene**: Configured `.gitignore` and comprehensive `.env.example` templates covering Supabase, PostgreSQL, and Anthropic Claude configurations.
 - [x] **Data & Model Specifications**: Created async SQLAlchemy models and Pydantic schemas for `Trainer`, `ClientProfile`, `ClientSession`, `WorkoutPlan`, `WorkoutLog`, and `AgentTrace`.
 - [x] **Auth Architecture**: Built dual authentication dependencies—Supabase PyJWT verification for trainers and secure UUID session-token resolution for clients.

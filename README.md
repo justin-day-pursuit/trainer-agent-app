@@ -185,7 +185,19 @@ In line with project scope guidelines, the following capabilities are architecte
 
 ---
 
-## 📖 Team & Agent Documentation
+## 📖 Team & Architecture Documentation
+
+### Operational Team Docs
 - [`team-reference.md`](./team-reference.md): Living team work log, active tasks, open decisions, and fresh clone onboarding instructions.
 - [`agents.md`](./agents.md): Agent engineering doctrine, harness specifications, prompt injection defenses, eval cards, and permission boundaries.
 - [`CLAUDE.md`](./CLAUDE.md): Direct instructions and quick rules for Claude Code and CLI users.
+
+### Detailed Project Documentation (`documents/`)
+- [`01-project-scope.md`](./documents/01-project-scope.md): Detailed project scope, target personas, business case, and boundary definitions.
+- [`02-product-requirements.md`](./documents/02-product-requirements.md): Refined PRD with functional/non-functional requirements, eval cards, and blast radius safeguards.
+- [`03-user-flows.md`](./documents/03-user-flows.md): Visual user flows and sequence diagrams (Mermaid) for logging, progression, triage, and recovery.
+- [`04-data-model.md`](./documents/04-data-model.md): Database schema documentation, ER diagram, JSON schemas, indexes, and Alembic migration guide.
+- [`05-api-reference.md`](./documents/05-api-reference.md): Complete REST API endpoint reference, authentication mechanisms, and request/response examples.
+- [`06-tech-stack.md`](./documents/06-tech-stack.md): Technology stack selections, architectural decision records (ADRs), and version pins.
+- [`07-security-and-safety.md`](./documents/07-security-and-safety.md): Threat models, token cryptography, tenant data isolation, and safety guardrails.
+- [`08-deployment-guide.md`](./documents/08-deployment-guide.md): Operations manual for Vercel, Render, Supabase, environment variables, and observability.
