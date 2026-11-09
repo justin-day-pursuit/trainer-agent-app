@@ -28,9 +28,15 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, alias="PORT")
 
     # Database configuration for PostgreSQL
+    # DATABASE_URL points to the transaction pooler (port 6543) for runtime queries.
     database_url: str = Field(
         default="postgresql+psycopg://postgres:postgres@localhost:5432/trainer_progression_db",
         alias="DATABASE_URL",
+    )
+    # DIRECT_URL points to the session connection (port 5432) for Alembic migrations.
+    direct_url: str = Field(
+        default="",
+        alias="DIRECT_URL",
     )
 
     # Supabase credentials and JWT verification
@@ -46,6 +52,36 @@ class Settings(BaseSettings):
         default="http://localhost:3000,http://127.0.0.1:3000",
         alias="CORS_ORIGINS",
     )
+
+    @property
+    def async_database_url(self) -> str:
+        """
+        Normalizes DATABASE_URL to use the async psycopg driver (postgresql+psycopg://).
+        Strips ?pgbouncer=true which psycopg (v3) rejects as an unrecognized libpq option.
+        """
+        url = self.database_url
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        if "?pgbouncer=true" in url:
+            url = url.replace("?pgbouncer=true", "")
+        elif "&pgbouncer=true" in url:
+            url = url.replace("&pgbouncer=true", "")
+        return url
+
+    @property
+    def async_direct_url(self) -> str:
+        """
+        Normalizes DIRECT_URL to use the async psycopg driver (postgresql+psycopg://)
+        for direct session connections (used by Alembic migrations on port 5432).
+        """
+        url = self.direct_url or self.database_url
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        if "?pgbouncer=true" in url:
+            url = url.replace("?pgbouncer=true", "")
+        elif "&pgbouncer=true" in url:
+            url = url.replace("&pgbouncer=true", "")
+        return url
 
     @property
     def cors_origins(self) -> List[str]:

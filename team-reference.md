@@ -32,7 +32,7 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 ### 🎯 What To Do (Active Sprints & Waves)
 > Refer to the detailed breakdown in [**`documents/09-implementation-plan.md`**](./documents/09-implementation-plan.md).
 
-- [ ] **Wave 0: Foundation Setup, DB Materialization & Contract Freeze**
+- [x] **Wave 0: Foundation Setup, DB Materialization & Contract Freeze**
   - Justin: Alembic migration (port 5432), seed data script (real GoTrue user, real UUID session), `/log/preview` split, doc contract alignment.
   - Yadan: Frontend Node environment setup (`npm install`), `.env.local`, type verification.
   - **Joint Sync Gate 0**: Verify live DB, health check, frozen exercise vocabulary (`ex_bench`, `ex_squat`, `ex_row`).

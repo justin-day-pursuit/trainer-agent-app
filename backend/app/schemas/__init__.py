@@ -15,6 +15,9 @@ from app.schemas.workout import (
     WorkoutPlanCreate,
     WorkoutPlanResponse,
     WorkoutLogCreate,
+    WorkoutLogPreviewRequest,
+    WorkoutLogPreviewResponse,
+    WorkoutLogConfirm,
     WorkoutLogResponse,
 )
 from app.schemas.agent import AgentHandoff, TriageCard
@@ -32,6 +35,9 @@ __all__ = [
     "WorkoutPlanCreate",
     "WorkoutPlanResponse",
     "WorkoutLogCreate",
+    "WorkoutLogPreviewRequest",
+    "WorkoutLogPreviewResponse",
+    "WorkoutLogConfirm",
     "WorkoutLogResponse",
     "AgentHandoff",
     "TriageCard",

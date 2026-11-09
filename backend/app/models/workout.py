@@ -9,6 +9,7 @@ Stores:
 """
 
 from datetime import datetime
+from typing import Optional
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -85,6 +86,11 @@ class WorkoutLog(Base):
     )
     plan_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("workout_plans.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
+    # Client-generated UUID for idempotency protection (prevents duplicate submissions on retry)
+    client_request_id: Mapped[Optional[str]] = mapped_column(
+        String(64), unique=True, nullable=True, index=True
     )
 
     # Raw voice transcript or chat message entered by the client

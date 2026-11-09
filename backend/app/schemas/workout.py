@@ -69,11 +69,39 @@ class WorkoutLogCreate(BaseModel):
     raw_input: str = Field(..., min_length=2, description="Natural language workout log message")
 
 
+class WorkoutLogPreviewRequest(BaseModel):
+    """Payload to request an Agent 1 parsing preview without persisting to the database."""
+    plan_id: Optional[int] = Field(None, description="Optional ID of active workout plan")
+    raw_input: str = Field(..., min_length=2, description="Natural language workout log message")
+
+
+class WorkoutLogPreviewResponse(BaseModel):
+    """Preview response returned after Agent 1 parses the log before client confirmation."""
+    status: str = Field(default="complete", description="'complete' or 'incomplete'")
+    extracted_sets: List[ExtractedSet] = Field(default_factory=list)
+    clarifying_question: Optional[str] = Field(None, description="Question asked if input was ambiguous")
+    has_pain_flag: bool = False
+    pain_summary: Optional[str] = None
+    model_name: str = Field(default="claude-haiku-4-5-20251001", description="Model used for extraction")
+    execution_time_ms: float = Field(default=0.0, description="Inference time in milliseconds")
+
+
+class WorkoutLogConfirm(BaseModel):
+    """Client confirmation payload submitting reviewed and edited sets."""
+    plan_id: Optional[int] = Field(None, description="Optional ID of active workout plan")
+    client_request_id: str = Field(..., description="Client-generated UUID for idempotency")
+    raw_input: str = Field(..., description="Original raw transcript")
+    confirmed_sets: List[ExtractedSet] = Field(..., description="Sets reviewed/edited by client")
+    has_pain_flag: bool = Field(default=False, description="Whether joint pain or injury was reported")
+    pain_summary: Optional[str] = Field(None, description="Summary note for pain flags")
+
+
 class WorkoutLogResponse(BaseModel):
-    """Structured response returned after Agent 1 parses the log."""
+    """Structured response returned after a workout log is committed to the database."""
     id: int
     client_id: int
     plan_id: Optional[int]
+    client_request_id: Optional[str] = None
     raw_input: str
     extracted_sets: List[ExtractedSet]
     has_pain_flag: bool

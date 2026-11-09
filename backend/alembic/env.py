@@ -26,9 +26,12 @@ if config.config_file_name is not None:
 # Set model metadata for autogenerate support
 target_metadata = Base.metadata
 
-# Override database URL with the one configured in our application environment
+# Override database URL with the one configured in our application environment.
+# Prefer DIRECT_URL (port 5432, session mode) for migrations because transaction poolers
+# on port 6543 do not support DDL transaction locks and prepared statements.
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.database_url)
+migration_url = settings.async_direct_url
+config.set_main_option("sqlalchemy.url", migration_url)
 
 
 def run_migrations_offline() -> None:

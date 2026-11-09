@@ -36,9 +36,9 @@ Returns system health, database status, and uptime verification.
 - **Response**: `200 OK`
 ```json
 {
-  "status": "healthy",
-  "version": "0.1.0",
-  "database": "connected"
+  "status": "ok",
+  "service": "Trainer Progression API",
+  "environment": "development"
 }
 ```
 
@@ -56,20 +56,20 @@ Validates the client's session token and retrieves their profile name and active
 ```json
 {
   "client_name": "Sarah Miller",
-  "token": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "token": "1be250aa-58a4-47d8-b117-29fdff768cd5",
   "active_plan": {
     "id": 42,
     "week_label": "2026-W45",
     "exercises": [
       {
-        "exercise_id": "bench_press",
+        "exercise_id": "ex_bench",
         "name": "Barbell Bench Press",
         "sets": 3,
         "target_reps": 10,
         "target_weight_lbs": 135.0
       },
       {
-        "exercise_id": "back_squat",
+        "exercise_id": "ex_squat",
         "name": "Back Squat",
         "sets": 3,
         "target_reps": 8,
@@ -84,8 +84,8 @@ Validates the client's session token and retrieves their profile name and active
 
 ---
 
-### 3.2. `POST /api/v1/s/{token}/log`
-Receives unstructured text or voice transcripts from the client's phone. Agent 1 parses the input into structured sets and scans for pain or injury notes.
+### 3.2. `POST /api/v1/s/{token}/log/preview`
+Parses client voice or chat text using Agent 1 without committing to the database. Returns structured preview sets and flags for client inline review.
 
 - **Authentication**: Valid `session_token` in path
 - **Request Body** (`application/json`):
@@ -95,16 +95,13 @@ Receives unstructured text or voice transcripts from the client's phone. Agent 1
   "raw_input": "Did bench 135 for 3 sets of 10. Shoulder was pinching on set 3."
 }
 ```
-- **Response**: `201 Created`
+- **Response**: `200 OK`
 ```json
 {
-  "id": 108,
-  "client_id": 12,
-  "plan_id": 42,
-  "raw_input": "Did bench 135 for 3 sets of 10. Shoulder was pinching on set 3.",
+  "status": "complete",
   "extracted_sets": [
     {
-      "exercise_id": "bench_press",
+      "exercise_id": "ex_bench",
       "set_num": 1,
       "reps": 10,
       "weight_lbs": 135.0,
@@ -112,7 +109,7 @@ Receives unstructured text or voice transcripts from the client's phone. Agent 1
       "note": "Completed clean"
     },
     {
-      "exercise_id": "bench_press",
+      "exercise_id": "ex_bench",
       "set_num": 2,
       "reps": 10,
       "weight_lbs": 135.0,
@@ -120,7 +117,91 @@ Receives unstructured text or voice transcripts from the client's phone. Agent 1
       "note": "Completed clean"
     },
     {
-      "exercise_id": "bench_press",
+      "exercise_id": "ex_bench",
+      "set_num": 3,
+      "reps": 8,
+      "weight_lbs": 135.0,
+      "pain_flag": true,
+      "note": "Shoulder pinching on final reps"
+    }
+  ],
+  "clarifying_question": null,
+  "has_pain_flag": true,
+  "pain_summary": "Shoulder discomfort noted on Bench Press",
+  "model_name": "claude-haiku-4-5-20251001",
+  "execution_time_ms": 240.5
+}
+```
+
+---
+
+### 3.3. `POST /api/v1/s/{token}/log`
+Commits the client-confirmed workout log to the database. Requires a client-generated UUID `client_request_id` for idempotency protection (returns HTTP 409 Conflict if already recorded).
+
+- **Authentication**: Valid `session_token` in path
+- **Request Body** (`application/json`):
+```json
+{
+  "plan_id": 42,
+  "client_request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "raw_input": "Did bench 135 for 3 sets of 10. Shoulder was pinching on set 3.",
+  "confirmed_sets": [
+    {
+      "exercise_id": "ex_bench",
+      "set_num": 1,
+      "reps": 10,
+      "weight_lbs": 135.0,
+      "pain_flag": false,
+      "note": "Completed clean"
+    },
+    {
+      "exercise_id": "ex_bench",
+      "set_num": 2,
+      "reps": 10,
+      "weight_lbs": 135.0,
+      "pain_flag": false,
+      "note": "Completed clean"
+    },
+    {
+      "exercise_id": "ex_bench",
+      "set_num": 3,
+      "reps": 8,
+      "weight_lbs": 135.0,
+      "pain_flag": true,
+      "note": "Shoulder pinching on final reps"
+    }
+  ],
+  "has_pain_flag": true,
+  "pain_summary": "Shoulder discomfort noted on Bench Press"
+}
+```
+- **Response**: `201 Created`
+```json
+{
+  "id": 108,
+  "client_id": 12,
+  "plan_id": 42,
+  "client_request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "raw_input": "Did bench 135 for 3 sets of 10. Shoulder was pinching on set 3.",
+  "extracted_sets": [
+    {
+      "exercise_id": "ex_bench",
+      "set_num": 1,
+      "reps": 10,
+      "weight_lbs": 135.0,
+      "pain_flag": false,
+      "note": "Completed clean"
+    },
+    {
+      "exercise_id": "ex_bench",
+      "set_num": 2,
+      "reps": 10,
+      "weight_lbs": 135.0,
+      "pain_flag": false,
+      "note": "Completed clean"
+    },
+    {
+      "exercise_id": "ex_bench",
       "set_num": 3,
       "reps": 8,
       "weight_lbs": 135.0,
@@ -133,10 +214,12 @@ Receives unstructured text or voice transcripts from the client's phone. Agent 1
   "logged_at": "2026-11-08T03:30:00Z"
 }
 ```
+- **Error States**:
+  - `409 Conflict`: A workout log with this `client_request_id` has already been recorded.
 
 ---
 
-### 3.3. `GET /api/v1/s/{token}/progress`
+### 3.4. `GET /api/v1/s/{token}/progress`
 Retrieves past workout log history for client self-monitoring on mobile.
 
 - **Authentication**: Valid `session_token` in path

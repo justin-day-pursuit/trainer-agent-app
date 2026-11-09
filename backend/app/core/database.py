@@ -20,12 +20,14 @@ from app.core.config import get_settings
 settings = get_settings()
 
 # Create the asynchronous engine connected to PostgreSQL.
-# In production, pool_pre_ping checks that connections are alive before using them,
-# preventing stale connection errors when communicating with cloud databases.
+# In production, pool_pre_ping checks that connections are alive before using them.
+# prepare_threshold=None disables prepared statement caching, required when
+# connecting to Supabase or PgBouncer in transaction pooling mode (port 6543).
 engine = create_async_engine(
-    settings.database_url,
+    settings.async_database_url,
     echo=settings.debug,
     pool_pre_ping=True,
+    connect_args={"prepare_threshold": None},
 )
 
 # Async session factory configured to produce independent database sessions
