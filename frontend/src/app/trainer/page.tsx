@@ -112,17 +112,17 @@ export default function TrainerDashboardPage() {
     });
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-900 text-slate-100">
+    <div className="flex-1 flex flex-col h-full bg-ground text-ink">
       {/* Top Trainer Navigation Bar */}
-      <header className="px-4 py-3 bg-slate-800/90 border-b border-slate-700/80 sticky top-0 z-20 flex items-center justify-between backdrop-blur-md">
+      <header className="px-4 py-3 bg-surface border-b border-hairline sticky top-0 z-20 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
-            <div className="p-1.5 bg-purple-500/10 rounded-lg text-purple-400">
+            <div className="p-1.5 bg-surface rounded-lg text-ink-2">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-white">Trainer Dashboard</h1>
-              <p className="text-xs text-slate-400">Sunday Planning & Safety Review</p>
+              <h1 className="font-display text-base font-medium text-ink">Trainer Dashboard</h1>
+              <p className="text-sm text-muted">Sunday Planning & Safety Review</p>
             </div>
           </Link>
         </div>
@@ -130,7 +130,7 @@ export default function TrainerDashboardPage() {
         {/* Action: Generate Client Link */}
         <button
           onClick={() => handleCreateSessionLink("New Athlete")}
-          className="touch-target px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+          className="touch-target px-3 py-1.5 bg-action hover:bg-action-hover text-on-action rounded-full text-sm font-semibold flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>New Client Link</span>
@@ -139,17 +139,17 @@ export default function TrainerDashboardPage() {
 
       {/* Generated Session Link Banner */}
       {generatedLink && (
-        <div className="mx-4 mt-3 p-3 bg-slate-800 border border-emerald-500/40 rounded-xl flex items-center justify-between text-xs">
+        <div className="mx-4 mt-3 p-3 bg-surface border border-hairline rounded-xl flex items-center justify-between text-sm">
           <div className="truncate mr-2">
-            <span className="text-slate-400">Client Session Link: </span>
-            <span className="text-emerald-400 font-mono select-all">{generatedLink}</span>
+            <span className="text-muted">Client Session Link: </span>
+            <span className="text-ink-2 font-mono select-all">{generatedLink}</span>
           </div>
           <button
             onClick={() => {
               navigator.clipboard.writeText(generatedLink);
               alert("Copied link to clipboard!");
             }}
-            className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded font-medium"
+            className="px-2 py-1 bg-surface hover:bg-hairline text-ink rounded font-medium"
           >
             Copy
           </button>
@@ -160,24 +160,24 @@ export default function TrainerDashboardPage() {
       <div className="px-4 pt-4 pb-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
         {/* Search */}
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-3 text-muted" />
           <input
             type="text"
             placeholder="Search clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full pl-9 pr-3 py-2 bg-surface border border-hairline rounded-xl text-sm text-ink placeholder-muted focus:outline-none focus:ring-1 focus:ring-ink"
           />
         </div>
 
         {/* Filter Urgency */}
-        <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs">
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center gap-1.5 bg-surface border border-hairline rounded-xl px-3 py-2 text-sm">
+          <Filter className="w-3.5 h-3.5 text-muted" />
           <select
             value={filterUrgency}
             onChange={(e) => setFilterUrgency(e.target.value)}
             aria-label="Filter by urgency"
-            className="bg-transparent text-white focus:outline-none w-full"
+            className="bg-transparent text-ink focus:outline-none w-full"
           >
             <option value="all">All Priorities</option>
             <option value="high">High Priority</option>
@@ -187,13 +187,13 @@ export default function TrainerDashboardPage() {
         </div>
 
         {/* Sort */}
-        <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs">
-          <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center gap-1.5 bg-surface border border-hairline rounded-xl px-3 py-2 text-sm">
+          <ArrowUpDown className="w-3.5 h-3.5 text-muted" />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as "urgency" | "name")}
             aria-label="Sort clients"
-            className="bg-transparent text-white focus:outline-none w-full"
+            className="bg-transparent text-ink focus:outline-none w-full"
           >
             <option value="urgency">Sort by Urgency</option>
             <option value="name">Sort by Name</option>
@@ -202,27 +202,27 @@ export default function TrainerDashboardPage() {
       </div>
 
       {/* Dedicated Scrollable Container for Review Items */}
-      <div className="flex-1 scrollable-container p-4 space-y-4">
+      <div className="flex-1 scrollable-container p-4 grid gap-4 lg:grid-cols-2 items-start content-start">
         {filteredItems.map((item) => (
           <div
             key={item.id}
             className={`p-4 rounded-2xl border transition-all ${
               item.approved
-                ? "bg-slate-800/40 border-slate-700/40 opacity-75"
+                ? "bg-surface border-hairline"
                 : item.urgency === "high"
-                ? "bg-slate-800/90 border-amber-500/50 shadow-md shadow-amber-950/20"
-                : "bg-slate-800/90 border-slate-700 shadow-sm"
+                ? "bg-surface border-warn-line"
+                : "bg-surface border-hairline"
             }`}
           >
             {/* Client Header & Urgency Badge */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white">{item.clientName}</h2>
+                <h2 className="font-display text-base font-medium text-ink">{item.clientName}</h2>
                 <span
-                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                  className={`text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                     item.urgency === "high"
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                      : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                      ? "bg-warn-bg text-warn border border-warn-line"
+                      : "bg-ground text-ink-2 border border-hairline"
                   }`}
                 >
                   {item.urgency} priority
@@ -230,7 +230,7 @@ export default function TrainerDashboardPage() {
               </div>
 
               {item.approved && (
-                <span className="flex items-center gap-1 text-xs text-emerald-400 font-semibold bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-800/50">
+                <span className="flex items-center gap-1 text-sm text-success font-semibold bg-success-bg px-2 py-0.5 rounded-full border border-success-line">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Approved
                 </span>
@@ -238,23 +238,23 @@ export default function TrainerDashboardPage() {
             </div>
 
             {/* Adherence / Event Reason */}
-            <p className="text-xs text-slate-300 mb-3">{item.reason}</p>
+            <p className="text-sm text-ink-2 mb-3">{item.reason}</p>
 
             {/* Proposed Progression Box */}
-            <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-700/70 mb-3">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                <span className="font-semibold text-slate-300 flex items-center gap-1">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="p-3 bg-ground rounded-xl border border-hairline mb-3">
+              <div className="flex items-center justify-between text-sm text-muted mb-1">
+                <span className="font-semibold text-ink-2 flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5 text-ink-2" />
                   Proposed Next Week Progression:
                 </span>
-                <span className="text-[11px] text-slate-400 font-mono">Engine: LinearProgression</span>
+                <span className="text-xs text-muted font-mono">Engine: LinearProgression</span>
               </div>
-              <p className="text-xs font-medium text-white">{item.proposedProgression}</p>
+              <p className="text-sm font-medium text-ink">{item.proposedProgression}</p>
 
               {/* Progression Planner Safety Warning Banner */}
               {item.safetyFlag && (
-                <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2 text-xs text-amber-200">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="mt-2 p-2 bg-warn-bg border border-warn-line rounded-lg flex items-start gap-2 text-sm text-warn">
+                  <AlertTriangle className="w-4 h-4 text-warn flex-shrink-0 mt-0.5" />
                   <span>{item.safetyFlag}</span>
                 </div>
               )}
@@ -262,12 +262,12 @@ export default function TrainerDashboardPage() {
 
             {/* Pre-Drafted Check-In Message from Trainer Assistant */}
             {item.draftMessage && (
-              <div className="p-3 bg-purple-950/20 border border-purple-800/40 rounded-xl mb-3">
-                <span className="text-[11px] font-semibold text-purple-300 flex items-center gap-1 mb-1">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <div className="p-3 bg-ground border border-hairline rounded-xl mb-3">
+                <span className="text-xs font-semibold text-ink-2 flex items-center gap-1 mb-1">
+                  <Sparkles className="w-3.5 h-3.5 text-ink-2" />
                   Trainer Assistant Suggested Follow-Up:
                 </span>
-                <p className="text-xs text-slate-300 italic">"{item.draftMessage}"</p>
+                <p className="text-sm text-ink-2 italic">"{item.draftMessage}"</p>
               </div>
             )}
 
@@ -277,19 +277,19 @@ export default function TrainerDashboardPage() {
                 <>
                   <button
                     onClick={() => handleApprove(item.id)}
-                    className="touch-target flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    className="touch-target flex-1 py-2 bg-action hover:bg-action-hover text-on-action font-semibold rounded-full text-sm flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Approve Progression</span>
                   </button>
-                  <button className="touch-target px-4 py-2 border border-slate-700 hover:bg-slate-700 active:bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold">
+                  <button className="touch-target px-4 py-2 border border-hairline hover:bg-hairline active:bg-hairline text-ink-2 rounded-full text-sm font-semibold">
                     Edit Plan
                   </button>
                 </>
               ) : (
                 <button
                   disabled
-                  className="w-full py-2 bg-slate-800 text-slate-500 rounded-xl text-xs font-semibold cursor-not-allowed"
+                  className="w-full py-2 bg-surface text-muted rounded-xl text-sm font-semibold cursor-not-allowed"
                 >
                   Plan Sent to Client's Session Link
                 </button>
@@ -300,9 +300,9 @@ export default function TrainerDashboardPage() {
       </div>
 
       {/* Model & Agent Observability Footer */}
-      <footer className="px-4 py-2 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
+      <footer className="px-4 py-2 bg-surface border-t border-hairline text-xs text-muted flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
           <span>Active: Workout Logger, Progression Planner, Trainer Assistant</span>
         </div>
         <div>Model: Claude Sonnet 5.5</div>
