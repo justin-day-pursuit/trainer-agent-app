@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. One neutral palette; colour is reserved for status
+ * (success and pain warnings), so it always means something.
+ */
+@theme inline {
+  --font-sans: var(--font-instrument-sans), Arial, sans-serif;
+  --font-display: var(--font-host-grotesk), Arial, sans-serif;
+  --color-ground: #fcfcfd;
+  --color-surface: #f4f3f4;
+  --color-hairline: #dddddd;
+  --color-ink: #141314;
+  --color-ink-2: #454545;
+  --color-muted: #5c5c5c;
+  --color-action: #111113;
+  --color-action-hover: #33333a;
+  --color-on-action: #fcfcfd;
+  --color-success: #166534;
+  --color-success-bg: #e9f6ee;
+  --color-success-line: #a9d8ba;
+  --color-warn: #7a4a00;
+  --color-warn-bg: #fdf3e0;
+  --color-warn-line: #e5c38a;
+}
+
 /* 
  * Mobile Browser & Gym Floor Optimization Styles 
  */
@@ -14,9 +38,9 @@
 html, body {
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #0f172a;
-  color: #f8fafc;
+  font-family: var(--font-sans);
+  background-color: var(--color-ground);
+  color: var(--color-ink);
 }
 
 /* Dedicated scrollable container separate from overall page scroll */
@@ -24,7 +48,7 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #334155 transparent;
+  scrollbar-color: #dddddd transparent;
 }
 
 .scrollable-container::-webkit-scrollbar {
@@ -36,7 +60,7 @@ html, body {
 }
 
 .scrollable-container::-webkit-scrollbar-thumb {
-  background-color: #334155;
+  background-color: #dddddd;
   border-radius: 9999px;
 }
 
@@ -44,4 +68,12 @@ html, body {
 .touch-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Visible keyboard focus on every control */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
 }
