@@ -9,6 +9,13 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+/** An error response from the API, keeping the HTTP status so callers can react to it. */
+export class ApiError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
+
 interface FetchOptions extends RequestInit {
   token?: string;
 }
@@ -41,7 +48,7 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
       // Fallback to HTTP status text if response is not JSON
       errorDetail = response.statusText || errorDetail;
     }
-    throw new Error(errorDetail);
+    throw new ApiError(errorDetail, response.status);
   }
 
   return response.json() as Promise<T>;
