@@ -41,13 +41,13 @@ class BaseAgentHarness:
         """
         self.tools[name] = func
 
-    def wrap_user_data(self, tag: str, raw_content: str) -> str:
+    def wrap_user_data(self, tag: str, raw_content: str, source: str = "untrusted_user_data") -> str:
         """
         Wraps untrusted client or external text inside explicit XML data markers.
         This provides a structural barrier against prompt injection attacks.
         """
         cleaned = raw_content.replace(f"</{tag}>", f"&lt;/{tag}&gt;")
-        return f"<{tag} source='untrusted_user_data'>\n{cleaned}\n</{tag}>"
+        return f"<{tag} source='{source}'>\n{cleaned}\n</{tag}>"
 
     def log_step(self, action: str, details: Dict[str, Any]):
         """

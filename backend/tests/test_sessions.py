@@ -13,12 +13,37 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.core.auth import get_current_client_session
 from app.core.database import get_db
+from app.api.v1.endpoints.sessions import intake_agent
+from app.schemas.workout import ExtractedSet
 
 client = TestClient(app)
 
 
+async def stand_in_logger(raw_input, current_exercises):
+    """Stands in for the live model so these endpoint tests stay deterministic."""
+    if "gym closing" in raw_input:
+        return {
+            "status": "incomplete",
+            "extracted_sets": [],
+            "clarifying_question": "Did you hit the prescribed exercises today?",
+            "has_pain_flag": False,
+            "pain_summary": None,
+        }
+    pain = "pinching" in raw_input
+    return {
+        "status": "complete",
+        "extracted_sets": [
+            ExtractedSet(exercise_id="ex_bench", set_num=n, weight_lbs=135.0, reps=8 if pain and n == 3 else 10, pain_flag=pain and n == 3)
+            for n in range(1, 4)
+        ],
+        "clarifying_question": None,
+        "has_pain_flag": pain,
+        "pain_summary": "Shoulder pinching on bench" if pain else None,
+    }
+
+
 @pytest.fixture(autouse=True)
-def override_dependencies():
+def override_dependencies(monkeypatch):
     """Mock database and session authentication dependencies for isolated unit testing."""
     mock_session_record = MagicMock()
     mock_session_record.client_id = 1
@@ -26,9 +51,11 @@ def override_dependencies():
     mock_session_record.is_active = True
 
     mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=MagicMock())
 
     app.dependency_overrides[get_current_client_session] = lambda: mock_session_record
     app.dependency_overrides[get_db] = lambda: mock_db
+    monkeypatch.setattr(intake_agent, "parse_workout_submission", AsyncMock(side_effect=stand_in_logger))
     yield
     app.dependency_overrides.clear()
 
