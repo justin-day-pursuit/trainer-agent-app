@@ -58,6 +58,21 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 - [ ] **Decision 2: Progression Rule Nuances**: Define specific rep target bands (e.g., compound lifts +5 lbs on $3 \times 10$, isolation lifts +2.5 lbs or rep progression before weight progression).
 - [ ] **Decision 3: Trainer Client Import**: Determine whether an import parser for Google Sheets/CSV is needed in Phase 2 or deferred to post-MVP.
 
+### 🔎 Open Items from Yadan's Repo Review (2026-11-09)
+- [ ] **1. Builder lanes (Justin to confirm with Yadan)**: On Slack, Justin suggested Yadan take the client-facing agent and the week-to-week progression calculation. `documents/09-implementation-plan.md` gives both to Justin and puts Yadan on frontend and mobile UX. Pick one and update the plan to match.
+- [ ] **2. Wave 0 is ticked above, but Yadan's part is not done**: Tasks 0.6 and 0.7 (`npm install`, `frontend/.env.local`, `npm run build`, `npm run lint`) still need doing on Yadan's machine. The Joint Sync Gate 0 checklist in the plan is also unchecked.
+- [ ] **3. Intake is smaller than the PRD**: The PRD has the client filling out an intake form, with AI flagging missing answers and drafting a summary. `documents/03-user-flows.md` has the trainer entering goals and injury notes by hand. Decide whether to keep the smaller version and update the PRD, or build the form.
+- [x] **4. Integration branch (decided 2026-11-09)**: Stay on `develop` until the app works, then merge to `main`. See section 4.
+
+### 🎬 Final Project Submission (Due Wed, Nov 11, 12:00 PM, group)
+A 5-minute presentation, submitted through the Google Form:
+- [ ] **1. Record** a 2.5-minute working demo navigating the app.
+- [ ] **2. Create** a 2.5-minute deck: the JD, what we address, how it improves the workflow.
+- [ ] **3. Show** the architecture and a diagram of how the agent or workflow moves through.
+- [ ] **4. Practice** to hit 5 minutes, then submit both.
+
+The demo needs the core loop working on `develop`: the client logs a workout (Wave 1), the engine drafts next week, and the trainer approves it (Wave 2). Wave 3 and Wave 4 can wait until after the demo.
+
 ---
 
 ## 🚀 3. New Clone Onboarding Checklist
@@ -111,8 +126,8 @@ Follow this checklist whenever setting up a new local workspace:
 
 ## 🤝 4. Collaboration & Branch Discipline
 
-- **Integration Branch**: `main` serves as the primary integration branch.
-- **Pull Request Workflow**: Feature development occurs on descriptive branches (e.g., `feat/workout-logger-extraction`, `feat/session-links`). Changes are merged into `main` via PRs after automated tests and build checks pass.
+- **Integration Branch**: `develop` is the integration branch until the app works end to end. Only then does it merge to `main`.
+- **Pull Request Workflow**: Feature development occurs on descriptive branches (e.g., `feat/workout-logger-extraction`, `feat/session-links`). Changes are merged into `develop` via PRs after automated tests and build checks pass.
 - **Lane Ownership**: Respect module ownership during active development. Coordinate before refactoring another builder's active files to avoid merge friction.
 - **Local Testing Before Pushing**: Always verify backend tests pass (`pytest tests/`) and frontend compiles (`npm run build`) before submitting pull requests.
 

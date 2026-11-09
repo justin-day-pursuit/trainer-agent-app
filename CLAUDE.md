@@ -6,7 +6,7 @@
 
 ## ⚡ Quick Operational Rules
 1. **Secrets & Security**: Never commit `.env` files, actual credentials, or API tokens. Keep all secrets in `.env` (use `.env.example` as reference).
-2. **Branch Discipline**: The project integration branch is `main`. Submit pull requests rather than pushing directly to `main`.
+2. **Branch Discipline**: The project integration branch is `develop` until the app works end to end, then it merges to `main`. Submit pull requests rather than pushing feature work directly.
 3. **Collaboration & Lane Ownership**: Check [`team-reference.md`](./team-reference.md) for active sprint tasks, completed items, and open architectural decisions before modifying shared modules.
 4. **Code Quality**:
    - Write clear explanatory comments for functions and key blocks so non-technical stakeholders and future maintainers can easily understand them.
