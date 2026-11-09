@@ -201,3 +201,4 @@ In line with project scope guidelines, the following capabilities are architecte
 - [`06-tech-stack.md`](./documents/06-tech-stack.md): Technology stack selections, architectural decision records (ADRs), and version pins.
 - [`07-security-and-safety.md`](./documents/07-security-and-safety.md): Threat models, token cryptography, tenant data isolation, and safety guardrails.
 - [`08-deployment-guide.md`](./documents/08-deployment-guide.md): Operations manual for Vercel, Render, Supabase, environment variables, and observability.
+- [`09-implementation-plan.md`](./documents/09-implementation-plan.md): Comprehensive two-builder implementation plan (Justin & Yadan) structured in 5 waves (Wave 0 to Wave 4) with explicit builder lanes, joint sync gates, and verification criteria.

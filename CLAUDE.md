@@ -1,8 +1,8 @@
 # CLAUDE.md — Project Guidelines for Claude Code & CLI
 
 ## 📖 Mandatory Reading
-All agent architecture principles, system prompts, harness standards, safety boundaries, and evaluation metrics are defined in [`agents.md`](./agents.md).
-Read `agents.md` before writing or modifying any agent, prompt, or harness code.
+- All agent architecture principles, system prompts, harness standards, safety boundaries, and evaluation metrics are defined in [`agents.md`](./agents.md).
+- The complete multi-wave engineering roadmap, builder lanes (Justin vs. Yadan), and joint sync gates are defined in [`documents/09-implementation-plan.md`](./documents/09-implementation-plan.md). Read this before beginning any wave or task.
 
 ## ⚡ Quick Operational Rules
 1. **Secrets & Security**: Never commit `.env` files, actual credentials, or API tokens. Keep all secrets in `.env` (use `.env.example` as reference).

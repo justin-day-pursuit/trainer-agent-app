@@ -21,7 +21,7 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 ### ✅ What Has Been Done
 - [x] **Project Scaffolding**: Initialized decoupled monorepo architecture with Next.js (App Router) on the frontend and FastAPI on the backend.
 - [x] **Documentation & Architecture Standards**: Established `README.md`, `team-reference.md`, `agents.md`, and `CLAUDE.md`.
-- [x] **Comprehensive Project Documentation (`documents/`)**: Authored 8 foundational reference manuals covering project scope, refined PRD with eval cards, visual user flows (Mermaid), database schema with ER diagram, REST API reference, technology stack ADRs, security & safety threat models, and cloud deployment guide.
+- [x] **Comprehensive Project Documentation (`documents/`)**: Authored 9 foundational reference manuals covering project scope, refined PRD with eval cards, visual user flows (Mermaid), database schema with ER diagram, REST API reference, technology stack ADRs, security & safety threat models, cloud deployment guide, and the multi-wave two-builder implementation plan ([`09-implementation-plan.md`](./documents/09-implementation-plan.md)).
 - [x] **Environment & Secret Hygiene**: Configured `.gitignore` and comprehensive `.env.example` templates covering Supabase, PostgreSQL, and Anthropic Claude configurations.
 - [x] **Data & Model Specifications**: Created async SQLAlchemy models and Pydantic schemas for `Trainer`, `ClientProfile`, `ClientSession`, `WorkoutPlan`, `WorkoutLog`, and `AgentTrace`.
 - [x] **Auth Architecture**: Built dual authentication dependencies—Supabase PyJWT verification for trainers and secure UUID session-token resolution for clients.
@@ -29,13 +29,29 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 - [x] **3-Agent Interfaces**: Defined system prompt templates, tool schemas, and harness structures for Agent 1 (Intake/Logging), Agent 2 (Progression/Planning), and Agent 3 (Trainer Monitoring).
 - [x] **Mobile Frontend Shells**: Created mobile-first layouts, safe-area CSS utilities, client workout logging screen with local persistence, and trainer review dashboard.
 
-### 🎯 What To Do (Active Sprints & Backlog)
-- [ ] **Task 1: Supabase DB Live Link**: Connect real Supabase PostgreSQL instance and execute initial Alembic migration.
-- [ ] **Task 2: Client Session Generation**: Implement API route for trainers to generate and copy unique client session URLs (`/s/:token`) directly from the dashboard.
-- [ ] **Task 3: Agent 1 Harness Integration**: Wire Anthropic Claude API calls into `IntakeLoggingAgent` to parse voice transcripts and free-text into validated JSON set rows.
-- [ ] **Task 4: Eval Suite Execution**: Implement automated test runner for the 3 PRD Eval Cases (Golden normal, Golden edge with pain flag, Adversarial non-workout chat).
-- [ ] **Task 5: Progression Review Workflow**: Connect frontend "Approve Plan" button to backend `POST /trainer/plans/:id/approve` to activate draft programs.
-- [ ] **Task 6: Agent 3 Adherence Alerts**: Implement scheduled check to identify clients with no logs in the past 7 days and draft check-in cards on the trainer dashboard.
+### 🎯 What To Do (Active Sprints & Waves)
+> Refer to the detailed breakdown in [**`documents/09-implementation-plan.md`**](./documents/09-implementation-plan.md).
+
+- [ ] **Wave 0: Foundation Setup, DB Materialization & Contract Freeze**
+  - Justin: Alembic migration (port 5432), seed data script (real GoTrue user, real UUID session), `/log/preview` split, doc contract alignment.
+  - Yadan: Frontend Node environment setup (`npm install`), `.env.local`, type verification.
+  - **Joint Sync Gate 0**: Verify live DB, health check, frozen exercise vocabulary (`ex_bench`, `ex_squat`, `ex_row`).
+- [ ] **Wave 1: In-Gym Logging Loop & Agent 1 (Extraction & Pain Detection)**
+  - Justin: Live Claude Haiku wiring, preview/commit endpoints, deterministic eval test suite.
+  - Yadan: Replace set grid with editable confirmation card, Web Speech API dictation button, `localStorage` buffer.
+  - **Joint Sync Gate 1**: End-to-end mobile logging with inline typo correction and idempotency check.
+- [ ] **Wave 2: Deterministic Progression Engine & Agent 2 (Safety Cross-Check & Trainer Review)**
+  - Justin: Per-exercise progression engine (+5 lbs compound), weekly planning service, Agent 2 safety harness (Sonnet), archive-on-approve.
+  - Yadan: Trainer plan review queue, visual delta cards (+5 lbs / held), 1-click approve & inline edit UI.
+  - **Joint Sync Gate 2**: End-to-end progression loop with shoulder pain hold and trainer approval.
+- [ ] **Wave 3: Agent 3 (Triage, Adherence & Outreach) & Trainer Admin Suite**
+  - Justin: Agent 3 backend service (Haiku, urgency in Python), triage feed & dismissal API, client session generation endpoint.
+  - Yadan: Trainer triage feed UI, dismiss alerts, client roster table, add client & link generator modal.
+  - **Joint Sync Gate 3**: Inactivity detection, outreach message drafting, session link generation.
+- [ ] **Wave 4: Security Hardening & Production Deployment**
+  - Justin: Audit trace review, Render backend deployment, full test suite execution.
+  - Yadan: Mobile cross-browser QA, Vercel frontend deployment.
+  - **Joint Sync Gate 4 / Final Handshake**: Live production demo flow.
 
 ### ⚠️ Issues Needing Resolution (Blockers & Decisions)
 - [ ] **Decision 1: Mobile Speech-to-Text Strategy**: Evaluate browser-native Web Speech API vs server-side Whisper via HTTPX. *Recommendation*: Use Web Speech API for instant client-side dictation, fallback to audio upload if browser support is missing.
