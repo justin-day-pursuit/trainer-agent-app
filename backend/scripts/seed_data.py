@@ -34,17 +34,18 @@ async def seed_database() -> None:
     print("🌱 Connecting to database to seed initial data...")
 
     async with async_session_factory() as session:
-        # 1. Seed Trainer
-        trainer_email = "coach.mike@example.com"
-        stmt = select(Trainer).where(Trainer.email == trainer_email)
+        # 1. Seed Trainer (Linked to real Supabase GoTrue User)
+        trainer_email = "coach.mike@pursuit.org"
+        stmt = select(Trainer).where(
+            (Trainer.email == trainer_email) | (Trainer.email == "coach.mike@example.com")
+        )
         res = await session.execute(stmt)
         trainer = res.scalar_one_or_none()
 
+        real_supabase_uid = "2fff5919-654b-4c31-9aea-5c0e1d55215b"
         if not trainer:
-            # Use deterministic UUID for dev trainer
-            trainer_auth_id = str(uuid.UUID("11111111-2222-3333-4444-555555555555"))
             trainer = Trainer(
-                supabase_user_id=trainer_auth_id,
+                supabase_user_id=real_supabase_uid,
                 email=trainer_email,
                 full_name="Coach Mike Henderson",
             )
@@ -52,7 +53,10 @@ async def seed_database() -> None:
             await session.flush()
             print(f"✅ Created Trainer: {trainer.full_name} ({trainer.email}) [ID: {trainer.id}]")
         else:
-            print(f"ℹ️ Trainer already exists: {trainer.full_name} [ID: {trainer.id}]")
+            trainer.supabase_user_id = real_supabase_uid
+            trainer.email = trainer_email
+            await session.flush()
+            print(f"ℹ️ Trainer verified with live Supabase user: {trainer.full_name} [ID: {trainer.id}]")
 
         # 2. Seed Client 1: Sarah Miller (Active injury profile for Agent 2 safety testing)
         sarah_email = "sarah.miller@example.com"
