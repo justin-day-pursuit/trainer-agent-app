@@ -218,7 +218,7 @@ Dedicated observability log storing step-by-step audit records for every AI agen
 | `agent_name` | `VARCHAR(100)`| `NOT NULL`, indexed | None | Name of executing agent (`Agent1_Intake`, `Agent2_Safety`, `Agent3_Admin`). |
 | `client_id` | `INTEGER` | `NULLABLE`, indexed | None | Client associated with execution (if scoped to client). |
 | `session_id` | `VARCHAR(100)`| `NULLABLE` | None | Correlation ID for multi-step workflows. |
-| `model_name` | `VARCHAR(100)`| `NOT NULL` | None | Active Anthropic model ID (e.g., `claude-3-7-sonnet-20250219`). |
+| `model_name` | `VARCHAR(100)`| `NOT NULL` | None | Active Anthropic model ID (e.g., `claude-sonnet-5-5`). |
 | `status` | `VARCHAR(50)` | `NOT NULL` | `'success'` | Outcome: `'success'`, `'error'`, or `'timeout'`. |
 | `input_summary`| `TEXT` | `NULLABLE` | None | Sanitized summary of prompt context. |
 | `output_summary`| `TEXT` | `NULLABLE` | None | Summary of generated completion or tool call. |

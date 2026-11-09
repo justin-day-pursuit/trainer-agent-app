@@ -26,7 +26,7 @@ class BaseAgentHarness:
         agent_name: str,
         system_prompt: str,
         max_steps: int = 8,
-        model_name: str = "claude-3-7-sonnet-20250219",
+        model_name: str = "claude-sonnet-5-5",
     ):
         self.agent_name = agent_name
         self.system_prompt = system_prompt

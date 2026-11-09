@@ -34,7 +34,7 @@ class TrainerAssistantAgent(BaseAgentHarness):
             agent_name="Agent3_TrainerAssistantAgent",
             system_prompt=AGENT_3_SYSTEM_PROMPT.strip(),
             max_steps=5,
-            model_name="claude-3-7-sonnet-20250219",
+            model_name="claude-sonnet-5-5",
         )
         self.register_tool(
             "draft_checkin_message",

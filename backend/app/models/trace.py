@@ -29,7 +29,7 @@ class AgentTrace(Base):
     client_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
     session_id: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    # Model metadata (e.g. 'claude-3-7-sonnet-20250219', fallback reasons if any)
+    # Model metadata (e.g. 'claude-sonnet-5-5', fallback reasons if any)
     model_name: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="success", nullable=False)  # success, error, timeout
 

@@ -40,7 +40,7 @@ class ProgressionPlanAgent(BaseAgentHarness):
             agent_name="Agent2_ProgressionPlanAgent",
             system_prompt=AGENT_2_SYSTEM_PROMPT.strip(),
             max_steps=5,
-            model_name="claude-3-5-haiku-20241022",
+            model_name="claude-haiku-5-5",
         )
         self.register_tool(
             "flag_injury_risks",
