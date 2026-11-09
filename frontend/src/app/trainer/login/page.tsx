@@ -32,18 +32,12 @@ export default function TrainerLoginPage() {
       });
 
       if (error) {
-        // In local development before live Supabase credentials are wired, allow dev bypass
-        if (email.includes("trainer") || email.includes("@")) {
-          router.push("/trainer");
-          return;
-        }
         setErrorMessage(error.message);
       } else {
         router.push("/trainer");
       }
     } catch {
-      // In dev mode, route to trainer dashboard
-      router.push("/trainer");
+      setErrorMessage("We couldn't sign you in. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
