@@ -60,7 +60,7 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 
 ### 🔎 Open Items from Yadan's Repo Review (2026-11-09)
 - [ ] **1. Builder lanes (Justin to confirm with Yadan)**: On Slack, Justin suggested Yadan take the client-facing agent and the week-to-week progression calculation. `documents/09-implementation-plan.md` gives both to Justin and puts Yadan on frontend and mobile UX. Pick one and update the plan to match.
-- [ ] **2. Wave 0 is ticked above, but Yadan's part is not done**: Tasks 0.6 and 0.7 (`npm install`, `frontend/.env.local`, `npm run build`, `npm run lint`) still need doing on Yadan's machine. The Joint Sync Gate 0 checklist in the plan is also unchecked.
+- [ ] **2. Yadan's Wave 0 status (updated 2026-11-09)**: `npm install`, `npm run build`, `npm run lint`, and `tsc` all pass on `develop`, and `/`, `/s/:token`, and `/trainer` load with no errors. Still open: the Supabase values in `frontend/.env.local`, and the backend has not been run on Yadan's machine yet. The Joint Sync Gate 0 checklist in the plan is still unchecked. Heads up for Waves 1 and 2: `/s/:token` and `/trainer` show hardcoded sample data and nothing calls `apiFetch` yet.
 - [ ] **3. Intake is smaller than the PRD**: The PRD has the client filling out an intake form, with AI flagging missing answers and drafting a summary. `documents/03-user-flows.md` has the trainer entering goals and injury notes by hand. Decide whether to keep the smaller version and update the PRD, or build the form.
 - [x] **4. Integration branch (decided 2026-11-09)**: Stay on `develop` until the app works, then merge to `main`. See section 4.
 
