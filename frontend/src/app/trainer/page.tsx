@@ -56,7 +56,7 @@ export default function TrainerDashboardPage() {
       reason: "Shoulder pinching reported on set 3 of Bench Press. Reps hit: 10, 10, 8.",
       actionRequired: "Review shoulder injury history and approve or adjust load.",
       proposedProgression: "Bench Press: Hold at 135 lbs (No load jump due to pain flag)",
-      safetyFlag: "Agent 2 Warning: Client intake lists shoulder impingement. Weight increase blocked.",
+      safetyFlag: "Progression Planner Warning: Client intake lists shoulder impingement. Weight increase blocked.",
       draftMessage: "Hey Sarah, I saw your note about shoulder pinching on the last bench set. How is it feeling today?",
       approved: false,
     },
@@ -251,7 +251,7 @@ export default function TrainerDashboardPage() {
               </div>
               <p className="text-xs font-medium text-white">{item.proposedProgression}</p>
 
-              {/* Agent 2 Safety Warning Banner */}
+              {/* Progression Planner Safety Warning Banner */}
               {item.safetyFlag && (
                 <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2 text-xs text-amber-200">
                   <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -260,12 +260,12 @@ export default function TrainerDashboardPage() {
               )}
             </div>
 
-            {/* Pre-Drafted Check-In Message from Agent 3 */}
+            {/* Pre-Drafted Check-In Message from Trainer Assistant */}
             {item.draftMessage && (
               <div className="p-3 bg-purple-950/20 border border-purple-800/40 rounded-xl mb-3">
                 <span className="text-[11px] font-semibold text-purple-300 flex items-center gap-1 mb-1">
                   <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                  Agent 3 Suggested Follow-Up:
+                  Trainer Assistant Suggested Follow-Up:
                 </span>
                 <p className="text-xs text-slate-300 italic">"{item.draftMessage}"</p>
               </div>
@@ -303,7 +303,7 @@ export default function TrainerDashboardPage() {
       <footer className="px-4 py-2 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Active Agents: 3 (Intake, Progression, Monitor)</span>
+          <span>Active: Workout Logger, Progression Planner, Trainer Assistant</span>
         </div>
         <div>Model: Claude Sonnet 5.5</div>
       </footer>

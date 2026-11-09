@@ -4,7 +4,7 @@ Trainer Dashboard & Approval Endpoints.
 Provides the administrative review feed where personal trainers:
 1. Review progression drafts and AI safety flags.
 2. Hit the mandatory Human-in-the-Loop "Approve" button to push plans to clients.
-3. Inspect Agent 3 client adherence alerts (missed check-ins, joint discomfort flags).
+3. Inspect Trainer Assistant client adherence alerts (missed check-ins, joint discomfort flags).
 """
 
 from datetime import datetime
@@ -39,7 +39,7 @@ async def get_trainer_dashboard_summary(
     result = await db.execute(stmt)
     pending_plans = result.scalars().all()
 
-    # Pre-built triage cards from Agent 3 logic
+    # Pre-built triage cards from Trainer Assistant logic
     triage_cards: List[TriageCard] = [
         TriageCard(
             client_id=1,

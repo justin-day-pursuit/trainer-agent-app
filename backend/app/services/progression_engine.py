@@ -3,7 +3,7 @@ Deterministic Progression Engine.
 
 This module is the ONLY authority that calculates exercise weights.
 Architectural Rule: No LLM or AI agent ever computes or modifies weight numbers directly.
-Agent 2 reads the output of this engine as read-only data, evaluates it against the
+Progression Planner reads the output of this engine as read-only data, evaluates it against the
 client's injury history and pain logs, and flags safety warnings for the trainer.
 
 The engine uses Python's typing.Protocol so that alternative progression strategies

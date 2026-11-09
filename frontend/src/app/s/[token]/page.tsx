@@ -6,7 +6,7 @@
  * Features:
  * 1. Accessed strictly via unique session URL; no password required.
  * 2. Mobile-first design for one-handed gym floor usage (touch targets >= 44px).
- * 3. Natural language chat or voice log input parsed by Agent 1.
+ * 3. Natural language chat or voice log input parsed by Workout Logger.
  * 4. Quick Set Logger with one-tap joint pain / inhibitor toggle.
  * 5. LocalStorage Crash Safeguard: Keystrokes and sets are saved on every change,
  *    ensuring zero data is lost if the browser refreshes mid-workout.
@@ -258,7 +258,7 @@ export default function ClientSessionPage() {
               </button>
             </div>
 
-            {/* Natural Language Voice / Chat Extraction Input (Agent 1) */}
+            {/* Natural Language Voice / Chat Extraction Input (Workout Logger) */}
             <div className="bg-slate-800/70 border border-slate-700/70 rounded-2xl p-4">
               <h3 className="text-sm font-semibold text-slate-200 mb-1">
                 Voice Dictation or Chat Note

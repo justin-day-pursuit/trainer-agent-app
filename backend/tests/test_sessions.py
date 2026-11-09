@@ -2,7 +2,7 @@
 Unit tests for Client Mobile Session Endpoints.
 
 Verifies:
-1. Previewing a workout log runs Agent 1 parsing without database persistence.
+1. Previewing a workout log runs Workout Logger parsing without database persistence.
 2. Adversarial or non-workout input returns status="incomplete" and clarifying question.
 3. Submitting a confirmed workout log saves the sets.
 """

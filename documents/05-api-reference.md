@@ -85,7 +85,7 @@ Validates the client's session token and retrieves their profile name and active
 ---
 
 ### 3.2. `POST /api/v1/s/{token}/log/preview`
-Parses client voice or chat text using Agent 1 without committing to the database. Returns structured preview sets and flags for client inline review.
+Parses client voice or chat text using the Workout Logger without committing to the database. Returns structured preview sets and flags for client inline review.
 
 - **Authentication**: Valid `session_token` in path
 - **Request Body** (`application/json`):
@@ -320,7 +320,7 @@ Generates a new, non-guessable cryptographic session link URL for a client. Deac
 Endpoints powering the trainer's weekly review feed, triage alerts, and Human-in-the-Loop plan approvals.
 
 ### 5.1. `GET /api/v1/trainer/dashboard`
-Fetches all pending workout plan drafts awaiting review, accompanied by Agent 3 triage cards.
+Fetches all pending workout plan drafts awaiting review, accompanied by Trainer Assistant triage cards.
 
 - **Authentication**: `Bearer <supabase_jwt>`
 - **Response**: `200 OK`
@@ -389,7 +389,7 @@ Fetches all pending workout plan drafts awaiting review, accompanied by Agent 3 
 ---
 
 ### 5.3. `GET /api/v1/trainer/alerts`
-Retrieves Agent 3 compliance and adherence alerts (e.g., missed sessions, inactive clients).
+Retrieves Trainer Assistant compliance and adherence alerts (e.g., missed sessions, inactive clients).
 
 - **Authentication**: `Bearer <supabase_jwt>`
 - **Response**: `200 OK` (Array of alerts with urgency levels)

@@ -26,7 +26,7 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 - [x] **Data & Model Specifications**: Created async SQLAlchemy models and Pydantic schemas for `Trainer`, `ClientProfile`, `ClientSession`, `WorkoutPlan`, `WorkoutLog`, and `AgentTrace`.
 - [x] **Auth Architecture**: Built dual authentication dependencies—Supabase PyJWT verification for trainers and secure UUID session-token resolution for clients.
 - [x] **Modular Progression Engine**: Implemented Protocol-based deterministic progression engine ready for custom progression algorithms.
-- [x] **3-Agent Interfaces**: Defined system prompt templates, tool schemas, and harness structures for Agent 1 (Intake/Logging), Agent 2 (Progression/Planning), and Agent 3 (Trainer Monitoring).
+- [x] **3-Agent Interfaces**: Defined system prompt templates, tool schemas, and harness structures for the 3 agents: Workout Logger, Progression Planner, and Trainer Assistant.
 - [x] **Mobile Frontend Shells**: Created mobile-first layouts, safe-area CSS utilities, client workout logging screen with local persistence, and trainer review dashboard.
 
 ### 🎯 What To Do (Active Sprints & Waves)
@@ -36,16 +36,16 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
   - Justin: Alembic migration (port 5432), seed data script (real GoTrue user, real UUID session), `/log/preview` split, doc contract alignment.
   - Yadan: Frontend Node environment setup (`npm install`), `.env.local`, type verification.
   - **Joint Sync Gate 0**: Verify live DB, health check, frozen exercise vocabulary (`ex_bench`, `ex_squat`, `ex_row`).
-- [ ] **Wave 1: In-Gym Logging Loop & Agent 1 (Extraction & Pain Detection)**
+- [ ] **Wave 1: In-Gym Logging Loop & Workout Logger (Extraction & Pain Detection)**
   - Justin: Live Claude Sonnet 5.5 wiring, preview/commit endpoints, deterministic eval test suite.
   - Yadan: Replace set grid with editable confirmation card, Web Speech API dictation button, `localStorage` buffer.
   - **Joint Sync Gate 1**: End-to-end mobile logging with inline typo correction and idempotency check.
-- [ ] **Wave 2: Deterministic Progression Engine & Agent 2 (Safety Cross-Check & Trainer Review)**
-  - Justin: Per-exercise progression engine (+5 lbs compound), weekly planning service, Agent 2 safety harness (Claude Haiku 5.5), archive-on-approve.
+- [ ] **Wave 2: Deterministic Progression Engine & Progression Planner (Safety Cross-Check & Trainer Review)**
+  - Justin: Per-exercise progression engine (+5 lbs compound), weekly planning service, Progression Planner safety harness (Claude Haiku 5.5), archive-on-approve.
   - Yadan: Trainer plan review queue, visual delta cards (+5 lbs / held), 1-click approve & inline edit UI.
   - **Joint Sync Gate 2**: End-to-end progression loop with shoulder pain hold and trainer approval.
-- [ ] **Wave 3: Agent 3 (Triage, Adherence & Outreach) & Trainer Admin Suite**
-  - Justin: Agent 3 backend service (Claude Sonnet 5.5, urgency in Python), triage feed & dismissal API, client session generation endpoint.
+- [ ] **Wave 3: Trainer Assistant (Triage, Adherence & Outreach) & Trainer Admin Suite**
+  - Justin: Trainer Assistant backend service (Claude Sonnet 5.5, urgency in Python), triage feed & dismissal API, client session generation endpoint.
   - Yadan: Trainer triage feed UI, dismiss alerts, client roster table, add client & link generator modal.
   - **Joint Sync Gate 3**: Inactivity detection, outreach message drafting, session link generation.
 - [ ] **Wave 4: Security Hardening & Production Deployment**
@@ -112,7 +112,7 @@ Follow this checklist whenever setting up a new local workspace:
 ## 🤝 4. Collaboration & Branch Discipline
 
 - **Integration Branch**: `main` serves as the primary integration branch.
-- **Pull Request Workflow**: Feature development occurs on descriptive branches (e.g., `feat/agent1-extraction`, `feat/session-links`). Changes are merged into `main` via PRs after automated tests and build checks pass.
+- **Pull Request Workflow**: Feature development occurs on descriptive branches (e.g., `feat/workout-logger-extraction`, `feat/session-links`). Changes are merged into `main` via PRs after automated tests and build checks pass.
 - **Lane Ownership**: Respect module ownership during active development. Coordinate before refactoring another builder's active files to avoid merge friction.
 - **Local Testing Before Pushing**: Always verify backend tests pass (`pytest tests/`) and frontend compiles (`npm run build`) before submitting pull requests.
 
@@ -124,6 +124,6 @@ Follow this checklist whenever setting up a new local workspace:
 | :---: | :--- | :--- | :---: |
 | **Phase 1** | **Scaffolding & Architecture** | Monorepo layout, Next.js, FastAPI, Supabase models, agent specs, docs | 🔄 Completed |
 | **Phase 2** | **Database, Auth & Session Links** | Supabase migrations, trainer JWT auth, client session link resolution | ⬜ Next |
-| **Phase 3** | **Agent 1 & Agent 2 Progression Engine** | Set extraction from chat/voice, deterministic math engine, injury cross-checks, eval harness | ⬜ Planned |
-| **Phase 4** | **Trainer Dashboard & Agent 3** | Triage review queue, one-tap plan approvals, missed check-in alerts, draft messaging | ⬜ Planned |
+| **Phase 3** | **Workout Logger & Progression Planner** | Set extraction from chat/voice, deterministic math engine, injury cross-checks, eval harness | ⬜ Planned |
+| **Phase 4** | **Trainer Dashboard & Trainer Assistant** | Triage review queue, one-tap plan approvals, missed check-in alerts, draft messaging | ⬜ Planned |
 | **Phase 5** | **Mobile Gym Polish & Live Testing** | Voice transcription refinement, offline storage resilience, user testing with real trainer | ⬜ Planned |

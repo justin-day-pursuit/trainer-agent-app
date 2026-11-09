@@ -1,5 +1,5 @@
 """
-Agent 2: Progression & Workout Plan Generation Agent.
+Progression Planner Agent (Progression & Workout Plan Generation).
 
 Responsibilities:
 1. Receives three read-only inputs:
@@ -17,8 +17,8 @@ from typing import Any, Dict, List
 from app.agents.base import BaseAgentHarness
 from app.schemas.workout import SafetyFlag
 
-AGENT_2_SYSTEM_PROMPT = """
-You are a Trainer Safety and Progression assistant. You will be provided with three read-only inputs:
+PROGRESSION_PLANNER_SYSTEM_PROMPT = """
+You are the Progression Planner assistant. You will be provided with three read-only inputs:
 1) A client's intake injury profile
 2) In-workout pain notes extracted from last week
 3) Next week's proposed weights calculated by our deterministic code engine
@@ -28,17 +28,18 @@ Output a brief explanation for the trainer and an array of warning flags.
 You may NOT alter the actual weight integers.
 You may NOT communicate directly with the client. All outputs go to the trainer review queue.
 """
+AGENT_2_SYSTEM_PROMPT = PROGRESSION_PLANNER_SYSTEM_PROMPT
 
 
-class ProgressionPlanAgent(BaseAgentHarness):
+class ProgressionPlannerAgent(BaseAgentHarness):
     """
-    Harness for Agent 2. Evaluates proposed progressions against safety considerations.
+    Harness for the Progression Planner. Evaluates proposed progressions against safety considerations.
     """
 
     def __init__(self):
         super().__init__(
-            agent_name="Agent2_ProgressionPlanAgent",
-            system_prompt=AGENT_2_SYSTEM_PROMPT.strip(),
+            agent_name="ProgressionPlanner",
+            system_prompt=PROGRESSION_PLANNER_SYSTEM_PROMPT.strip(),
             max_steps=5,
             model_name="claude-haiku-5-5",
         )
@@ -110,3 +111,7 @@ class ProgressionPlanAgent(BaseAgentHarness):
             "safety_flags": warnings,
             "proposed_exercises": proposed_exercises,
         }
+
+
+# Backwards compatibility alias
+ProgressionPlanAgent = ProgressionPlannerAgent

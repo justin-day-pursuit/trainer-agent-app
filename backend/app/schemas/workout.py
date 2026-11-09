@@ -3,7 +3,7 @@ Pydantic Schemas for Workouts, Sets, and Logs.
 
 Defines the structured shapes for:
 1. Prescribed exercise plans (target reps, target weight).
-2. Sets extracted from client voice/chat by Agent 1.
+2. Sets extracted from client voice/chat by the Workout Logger.
 3. Workout log submissions and weekly progression drafts.
 """
 
@@ -22,7 +22,7 @@ class PrescribedExercise(BaseModel):
 
 
 class ExtractedSet(BaseModel):
-    """A completed set extracted from client speech or chat by Agent 1."""
+    """A completed set extracted from client speech or chat by the Workout Logger."""
     exercise_id: str = Field(..., description="Identifier of the exercise performed")
     set_num: int = Field(..., description="Sequence number of the set (1, 2, 3)")
     weight_lbs: Optional[float] = Field(None, description="Weight used in pounds, or null for bodyweight")
@@ -32,7 +32,7 @@ class ExtractedSet(BaseModel):
 
 
 class SafetyFlag(BaseModel):
-    """Safety concern flagged by Agent 2 during weekly review."""
+    """Safety concern flagged by the Progression Planner during weekly review."""
     severity: str = Field(default="warning", description="info, warning, or critical")
     exercise_id: Optional[str] = Field(None, description="Related exercise")
     message: str = Field(..., description="Human-readable safety note for the trainer")
@@ -70,13 +70,13 @@ class WorkoutLogCreate(BaseModel):
 
 
 class WorkoutLogPreviewRequest(BaseModel):
-    """Payload to request an Agent 1 parsing preview without persisting to the database."""
+    """Payload to request a Workout Logger parsing preview without persisting to the database."""
     plan_id: Optional[int] = Field(None, description="Optional ID of active workout plan")
     raw_input: str = Field(..., min_length=2, description="Natural language workout log message")
 
 
 class WorkoutLogPreviewResponse(BaseModel):
-    """Preview response returned after Agent 1 parses the log before client confirmation."""
+    """Preview response returned after the Workout Logger parses the log before client confirmation."""
     status: str = Field(default="complete", description="'complete' or 'incomplete'")
     extracted_sets: List[ExtractedSet] = Field(default_factory=list)
     clarifying_question: Optional[str] = Field(None, description="Question asked if input was ambiguous")

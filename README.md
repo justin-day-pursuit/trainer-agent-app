@@ -24,7 +24,7 @@ The application is structured as a decoupled monorepo split into a **mobile-opti
 +-------------------------------------------------------------+
 |                     CLIENT MOBILE BROWSER                   |
 |  - Accesses unique session URL: /s/:sessionToken            |
-|  - Conversational voice/chat logging (Agent 1)              |
+|  - Conversational voice/chat logging (Workout Logger)       |
 |  - Week-over-week progress viewer                           |
 |  - In-browser localStorage crash recovery                   |
 +------------------------------+------------------------------+
@@ -34,8 +34,8 @@ The application is structured as a decoupled monorepo split into a **mobile-opti
 +-------------------------------------------------------------+
 |                     TRAINER DASHBOARD                       |
 |  - Protected by Supabase Auth (/trainer)                    |
-|  - Review queue for draft progressions (Agent 2)            |
-|  - AI safety alerts & triage feed (Agent 3)                 |
+|  - Review queue for draft progressions (Progression Planner)|
+|  - AI safety alerts & triage feed (Trainer Assistant)       |
 |  - 1-click plan approval (Human-in-the-Loop)                |
 +------------------------------+------------------------------+
                                |
@@ -69,13 +69,13 @@ The application is structured as a decoupled monorepo split into a **mobile-opti
 
 ---
 
-## 🤖 The 3-Agent System
+## 🤖 The 3 Specialized Agents
 
 | Agent | Model | Responsibility | Trigger | Permissions & Safeguards |
 | :--- | :--- | :--- | :--- | :--- |
-| **Agent 1: Client Intake & Logging** | `claude-sonnet-5-5` (Front-Facing) | Converses with clients during intake; parses conversational chat/voice logs into structured set rows (`exercise_id`, `weight_lbs`, `reps`, `pain_flag`). | On-demand (client sends a message or submits a workout note). | **Read**: Client profile & prescribed workout.<br>**Write**: Extracted sets, pain notes, intake data.<br>**Safeguard**: Never changes workout plans; inline confirmation allows client 1-tap edits. |
-| **Agent 2: Progression & Plan Generator** | `claude-haiku-5-5` (Backend Safety) | Reads deterministic progression engine output, cross-references client injury profile and recent pain flags, and drafts next week's personalized program. Fast and cost-effective since progression is computed deterministically in Python. | Scheduled / Trainer-initiated weekend batch. | **Read**: Completed logs, progression engine output, injury history.<br>**Write**: Draft workout plans to trainer review queue.<br>**Safeguard**: Read-only; never communicates directly with clients; requires trainer approval. |
-| **Agent 3: Trainer Assistant & Monitor** | `claude-sonnet-5-5` (Front-Facing) | Monitors client adherence, detects missed workouts or declining engagement, prepares triage alert cards, and drafts empathetic, personalized check-in messages. | Scheduled daily / Trainer dashboard query. | **Read**: All client profiles, logs, and historical trends.<br>**Write**: Alert records and draft messages to trainer dashboard.<br>**Safeguard**: Cannot send messages or edit plans without explicit trainer approval. |
+| **Workout Logger** | `claude-sonnet-5-5` (Front-Facing) | Converses with clients during intake; parses conversational chat/voice logs into structured set rows (`exercise_id`, `weight_lbs`, `reps`, `pain_flag`). | On-demand (client sends a message or submits a workout note). | **Read**: Client profile & prescribed workout.<br>**Write**: Extracted sets, pain notes, intake data.<br>**Safeguard**: Never changes workout plans; inline confirmation allows client 1-tap edits. |
+| **Progression Planner** | `claude-haiku-5-5` (Backend Safety) | Reads deterministic progression engine output, cross-references client injury profile and recent pain flags, and drafts next week's personalized program. Fast and cost-effective since progression is computed deterministically in Python. | Scheduled / Trainer-initiated weekend batch. | **Read**: Completed logs, progression engine output, injury history.<br>**Write**: Draft workout plans to trainer review queue.<br>**Safeguard**: Read-only; never communicates directly with clients; requires trainer approval. |
+| **Trainer Assistant** | `claude-sonnet-5-5` (Front-Facing) | Monitors client adherence, detects missed workouts or declining engagement, prepares triage alert cards, and drafts empathetic, personalized check-in messages. | Scheduled daily / Trainer dashboard query. | **Read**: All client profiles, logs, and historical trends.<br>**Write**: Alert records and draft messages to trainer dashboard.<br>**Safeguard**: Cannot send messages or edit plans without explicit trainer approval. |
 
 ---
 

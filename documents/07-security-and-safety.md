@@ -89,7 +89,7 @@ Incoming Untrusted Client Chat
 ### Defensive Measures:
 1. **XML Data Isolation**: Untrusted content is always encapsulated in structured tags (`<CLIENT_CHAT_DATA>`) before being passed to reasoning models.
 2. **Instruction Neutralization**: System prompts strictly specify that any imperative language inside client inputs (e.g., *"Ignore previous rules"*) must be ignored, logged, and treated as raw exercise description data.
-3. **Zero Write Permissions for Extraction Models**: Agent 1 has zero database permissions to modify workout plans or calculate progression weights. Even if an injection compromised model reasoning, the harness enforces read-only access to programming data.
+3. **Zero Write Permissions for Extraction Models**: The Workout Logger has zero database permissions to modify workout plans or calculate progression weights. Even if an injection compromised model reasoning, the harness enforces read-only access to programming data.
 
 ---
 
@@ -110,7 +110,7 @@ All actions within the system are categorized by risk level with deterministic a
 | Failure Mode | Worst-Case Scenario | Blast Radius Containment Safeguard |
 | :--- | :--- | :--- |
 | **Voice Typo Extraction Error** | Mobile voice transcription misinterprets "135 lbs" as "315 lbs". | **Inline Confirmation Card**: Client sees the extracted numbers on their phone immediately and can tap to edit before saving. |
-| **Hallucinated Injury Flag** | Agent 2 flags a normal workout note as an injury conflict. | **1-Click Trainer Dismissal**: Flags are advisory badges on the trainer's triage queue. Trainer can dismiss the badge in 1 click; no workout data is altered. |
+| **Hallucinated Injury Flag** | The Progression Planner flags a normal workout note as an injury conflict. | **1-Click Trainer Dismissal**: Flags are advisory badges on the trainer's triage queue. Trainer can dismiss the badge in 1 click; no workout data is altered. |
 | **Mid-Workout Phone Crash** | Phone battery dies or browser tab crashes mid-gym session. | **Continuous LocalStorage Mirroring**: Every keystroke and draft set is stored in `localStorage` in real-time, restoring the session on reopen. |
 | **Stale Session Link** | Client loses old phone or wants to revoke link. | **Instant Trainer Token Regeneration**: 1-click token invalidation revokes old link immediately. |
 

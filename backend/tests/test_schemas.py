@@ -25,11 +25,11 @@ def test_agent_handoff_schema_valid():
         context={"client_id": 42, "week": "2026-W45"},
         partial_results={"proposed_weights": {"bench": 140.0}},
         confidence=0.95,
-        source_agent="Agent2_ProgressionPlanAgent",
+        source_agent="ProgressionPlanner",
     )
     assert handoff.confidence == 0.95
     assert handoff.context["client_id"] == 42
-    assert handoff.source_agent == "Agent2_ProgressionPlanAgent"
+    assert handoff.source_agent == "ProgressionPlanner"
 
 
 def test_agent_handoff_schema_confidence_bounds():

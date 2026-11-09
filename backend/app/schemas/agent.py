@@ -31,7 +31,7 @@ class AgentHandoff(BaseModel):
 
 class TriageCard(BaseModel):
     """
-    Urgency card produced by Agent 3 for display on the Trainer Dashboard.
+    Urgency card produced by the Trainer Assistant for display on the Trainer Dashboard.
     
     Alerts the trainer to clients who need attention (missed check-ins, joint pain flags,
     or pending weekly plan approvals).

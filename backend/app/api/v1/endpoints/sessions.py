@@ -89,7 +89,7 @@ async def preview_workout_log(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Parses client voice or chat text using Agent 1 without writing to the database.
+    Parses client voice or chat text using Workout Logger without writing to the database.
     Returns structured preview sets and flags for the client to review and edit inline.
     """
     start_time = time.perf_counter()

@@ -36,7 +36,7 @@ flowchart TD
     D --> E["Frontend auto-saves input to localStorage on every keystroke"]
     E --> F["Client taps 'Send / Log Sets'"]
     F --> G["POST /api/v1/s/:token/log sends message wrapped in CLIENT_CHAT_DATA"]
-    G --> H["Agent 1 parses text into structured JSON sets and pain indicators"]
+    G --> H["Workout Logger parses text into structured JSON sets and pain indicators"]
     H --> I{"Did client mention pain or discomfort?"}
     I -- "Yes" --> J["Set pain_flag=true with summarized pain note"]
     I -- "No" --> K["Set pain_flag=false"]
@@ -66,7 +66,7 @@ flowchart TD
     D -- "No (Missed reps)" --> F["Compute proposed weight: Hold current load"]
     E --> G["Assemble ProposedPlan data object"]
     F --> G
-    G --> H["Agent 2 receives ProposedPlan + Intake Injuries + Pain Flags"]
+    G --> H["Progression Planner receives ProposedPlan + Intake Injuries + Pain Flags"]
     H --> I{"Are there conflicts between proposed weights and pain/injury history?"}
     I -- "Yes (e.g. shoulder pain on bench)" --> J["Generate Safety Alert and recommendation for trainer"]
     I -- "No conflict" --> K["Mark plan as clean progression"]
@@ -87,7 +87,7 @@ flowchart TD
     A["Trainer opens /trainer dashboard"] --> B["Dashboard fetches pending triage items from /api/v1/trainer/dashboard"]
     B --> C["Display scrollable Triage Queue sorted by urgency"]
     C --> D["Review Plan Card: shows previous load, proposed load, and deltas"]
-    D --> E{"Are there Agent 2 Safety Warning Badges?"}
+    D --> E{"Are there Progression Planner Safety Warning Badges?"}
     E -- "Yes" --> F["Inspect highlighted injury conflict and pain note"]
     E -- "No" --> G["Standard progression review"]
     F --> H{"Trainer decision on flagged plan"}
@@ -116,11 +116,11 @@ sequenceDiagram
     participant Frontend as Mobile Browser (/s/:token)
     participant API as FastAPI Backend
     participant DB as Supabase PostgreSQL
-    participant A1 as Agent 1 (Intake & Logging)
+    participant A1 as Workout Logger
     participant PE as Deterministic Engine
-    participant A2 as Agent 2 (Safety Check)
+    participant A2 as Progression Planner
     actor Trainer
-    participant A3 as Agent 3 (Adherence Triage)
+    participant A3 as Trainer Assistant
 
     %% Session Logging
     Client->>Frontend: Speaks/types "Squat 225 3x5, Bench 135 3x10 felt shoulder pinch"
@@ -163,11 +163,11 @@ How a casual mention of discomfort is systematically tracked, prevented from cau
 
 ```mermaid
 flowchart TD
-    A["Client enters chat: 'Knee was aching on lunges'"] --> B["Agent 1 detects pain keyword and anatomy context"]
-    B --> C["Agent 1 sets pain_flag: true and summarizes note"]
+    A["Client enters chat: 'Knee was aching on lunges'"] --> B["Workout Logger detects pain keyword and anatomy context"]
+    B --> C["Workout Logger sets pain_flag: true and summarizes note"]
     C --> D["Database stores pain record in workout_logs.pain_flags_json"]
     D --> E["Weekly planning evaluates client history"]
-    E --> F["Agent 2 matches knee note with upcoming lower body program"]
+    E --> F["Progression Planner matches knee note with upcoming lower body program"]
     F --> G["Progression engine proposal marked with SAFETY_CONFLICT flag"]
     G --> H["Trainer dashboard displays warning badge with original quote"]
     H --> I["Trainer makes informed clinical adjustment before approving next week"]

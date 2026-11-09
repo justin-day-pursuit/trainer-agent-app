@@ -38,9 +38,9 @@ This application eliminates spreadsheet programming fatigue and logging friction
 
 | Value Proposition | Today's Friction | Trainer Progression App Solution |
 | :--- | :--- | :--- |
-| **Frictionless In-Gym Logging** | Form fatigue: dropdowns, set selectors, modal popups cause clients to stop logging. | Clients open a bookmarked session link (`/s/:token`) and send a quick chat or voice transcript. Agent 1 extracts exercise IDs, weights, reps, and pain indicators instantly. |
+| **Frictionless In-Gym Logging** | Form fatigue: dropdowns, set selectors, modal popups cause clients to stop logging. | Clients open a bookmarked session link (`/s/:token`) and send a quick chat or voice transcript. The Workout Logger extracts exercise IDs, weights, reps, and pain indicators instantly. |
 | **Deterministic Weight Calculations** | Manual spreadsheet formulas take hours, and pure LLM weight generation risks unsafe hallucinated loads. | A modular Python progression engine calculates linear, deload, or custom progression math deterministically. The LLM never invents weights. |
-| **Proactive Injury & Pain Triage** | In-workout pain notes get buried in text message threads until an injury occurs or progression fails. | Agent 2 cross-references recent pain flags against client injury history and flags conflicting weight increases on the trainer's triage queue. |
+| **Proactive Injury & Pain Triage** | In-workout pain notes get buried in text message threads until an injury occurs or progression fails. | The Progression Planner cross-references recent pain flags against client injury history and flags conflicting weight increases on the trainer's triage queue. |
 | **Human-in-the-Loop Oversight** | "Black-box" AI fitness apps disempower the coach and threaten client trust. | All auto-drafted plans remain in draft state until explicitly signed off by the trainer with 1-click approval or inline modification. |
 | **Zero-Account Client Identity** | Clients forget login passwords, drop off during onboarding, or abandon native app installs. | Clients use persistent, unguessable session URLs (`/s/:token`). Zero sign-up friction; bookmark once on mobile home screen. |
 
@@ -59,7 +59,7 @@ With Trainer Progression App:
   Trainers can scale to 35+ clients while improving safety monitoring and client retention.
 ```
 
-- **Retention Multiplier**: Proactive check-ins (facilitated by Agent 3 adherence tracking) catch disengaged clients before they cancel subscriptions.
+- **Retention Multiplier**: Proactive check-ins (facilitated by Trainer Assistant adherence tracking) catch disengaged clients before they cancel subscriptions.
 - **Safety Assurance**: Systemic logging of pain indicators reduces re-injury rates, protecting trainer liability and client trust.
 
 ---
@@ -73,11 +73,11 @@ With Trainer Progression App:
 |  [ IN-SCOPE: MVP FOUNDATION ]                     [ OUT-OF-SCOPE: FUTURE ]        |
 |  - Trainer Auth via Supabase                      - Native iOS/Android app store  |
 |  - Zero-account Client Session Links (/s/:token)    distribution                  |
-|  - Agent 1: Conversational Set & Pain Extraction  - Direct client payment billing |
+|  - Workout Logger: Set & Pain Extraction          - Direct client payment billing |
 |  - Deterministic Progression Engine (Protocol)    - Wearable/Smartwatch sync      |
-|  - Agent 2: Safety & Injury Flagging              - In-app video exercise library |
+|  - Progression Planner: Safety & Injury Flagging  - In-app video exercise library |
 |  - Trainer Review Queue with 1-click approval     - Automated client SMS/email    |
-|  - Agent 3: Client Adherence Monitoring Triage      delivery without trainer approval |
+|  - Trainer Assistant: Adherence Monitoring Triage   delivery without trainer approval |
 |  - LocalStorage in-gym crash protection           - Complex multi-block periodization |
 |  - Mobile-browser-first responsive layouts          (undulating, block, peaking)  |
 |  - Comprehensive audit trace logging              - Group workout competitions    |
@@ -86,7 +86,7 @@ With Trainer Progression App:
 
 ### In-Scope (MVP & Scaffolding)
 - **Role-Delimited Access**: Supabase email/password authentication for trainers; cryptographic token routing for client workout sessions.
-- **3-Agent Orchestration**: Agent 1 (intake/extraction), Agent 2 (safety analysis), and Agent 3 (administrative triage).
+- **3-Agent Orchestration**: Workout Logger (intake/extraction), Progression Planner (safety analysis), and Trainer Assistant (administrative triage).
 - **Client Web UI**: Mobile-first session page supporting natural language chat, quick-tap manual fallback, and real-time offline persistence via `localStorage`.
 - **Trainer Web UI**: Responsive dashboard featuring an adherence triage queue, plan approval cards with visual delta indicators, and client session link generation.
 - **Modular Progression Architecture**: Clean Python interface allowing linear progression for MVP and future rule engine swap-outs.

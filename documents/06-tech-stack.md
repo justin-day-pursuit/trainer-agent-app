@@ -66,9 +66,9 @@ This document provides a comprehensive analysis of the architectural choices, de
 
 ### 2.6. AI & Reasoning Engine: Anthropic Claude API
 - **Choice**: **Anthropic Claude API** (via `httpx` async client)
-  - **Agent 1 (Client Intake & Logging - Front-Facing)**: `claude-sonnet-5-5` (Claude Sonnet 5.5, flagship model; provides nuanced conversational understanding for noisy gym chat/voice inputs, precise set extraction, pain signal detection, and single clarifying questions).
-  - **Agent 2 (Progression Safety Cross-Check - Backend)**: `claude-haiku-5-5` (Claude Haiku 5.5, fast, low-cost model; weekly weight deltas are computed deterministically by the Python math engine, so Haiku solely cross-references proposed deltas against logged injury profiles and pain notes).
-  - **Agent 3 (Trainer Support & Adherence - Front-Facing)**: `claude-sonnet-5-5` (Claude Sonnet 5.5; high-empathy outreach draft generation, sophisticated multi-client adherence analysis, and contextual triage summaries for the trainer review queue).
+  - **Workout Logger (Front-Facing Client Extraction)**: `claude-sonnet-5-5` (Claude Sonnet 5.5, flagship model; provides nuanced conversational understanding for noisy gym chat/voice inputs, precise set extraction, pain signal detection, and single clarifying questions).
+  - **Progression Planner (Backend Progression Safety)**: `claude-haiku-5-5` (Claude Haiku 5.5, fast, low-cost model; weekly weight deltas are computed deterministically by the Python math engine, so the Progression Planner solely cross-references proposed deltas against logged injury profiles and pain notes).
+  - **Trainer Assistant (Front-Facing Trainer Support)**: `claude-sonnet-5-5` (Claude Sonnet 5.5; high-empathy outreach draft generation, sophisticated multi-client adherence analysis, and contextual triage summaries for the trainer review queue).
 - **Rationale**:
   - Superior instruction following and strict adherence to negative boundaries (*"NEVER alter weight integers"*, *"NEVER message clients directly"*).
   - Front-facing user experiences (clients in noisy gyms, trainers reviewing client comms) receive the highest reasoning quality with Claude Sonnet 5.5.

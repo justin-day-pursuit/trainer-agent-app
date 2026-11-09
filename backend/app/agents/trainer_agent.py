@@ -1,5 +1,5 @@
 """
-Agent 3: Trainer Assistant & Monitoring Agent.
+Trainer Assistant Agent (Client Adherence Monitoring & Triage Outreach Drafter).
 
 Responsibilities:
 1. Monitors client workout adherence patterns, identifying clients who have missed sessions.
@@ -14,25 +14,26 @@ from typing import Any, Dict, List
 from app.agents.base import BaseAgentHarness
 from app.schemas.agent import TriageCard
 
-AGENT_3_SYSTEM_PROMPT = """
-You are a Trainer Administrative Assistant.
+TRAINER_ASSISTANT_SYSTEM_PROMPT = """
+You are the Trainer Assistant.
 Your job is to monitor client training adherence, identify clients who have missed prescribed workouts or check-ins, and prepare concise triage summaries for the trainer.
 
 For clients requiring follow-up, draft a friendly, encouraging check-in message for the trainer's review.
 You may NOT send messages to clients directly. All communications require explicit trainer approval.
 You may NOT modify workout plans or exercise weights.
 """
+AGENT_3_SYSTEM_PROMPT = TRAINER_ASSISTANT_SYSTEM_PROMPT
 
 
 class TrainerAssistantAgent(BaseAgentHarness):
     """
-    Harness for Agent 3. Generates triage cards and drafts client communication.
+    Harness for the Trainer Assistant. Generates triage cards and drafts client communication.
     """
 
     def __init__(self):
         super().__init__(
-            agent_name="Agent3_TrainerAssistantAgent",
-            system_prompt=AGENT_3_SYSTEM_PROMPT.strip(),
+            agent_name="TrainerAssistant",
+            system_prompt=TRAINER_ASSISTANT_SYSTEM_PROMPT.strip(),
             max_steps=5,
             model_name="claude-sonnet-5-5",
         )
