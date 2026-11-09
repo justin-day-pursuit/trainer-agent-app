@@ -32,11 +32,11 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 ### 🎯 What To Do (Active Sprints & Waves)
 > Refer to the detailed breakdown in [**`documents/09-implementation-plan.md`**](./documents/09-implementation-plan.md).
 
-- [ ] **Wave 0: Foundation Setup, DB Materialization & Contract Freeze** *(In Progress)*
+- [x] **Wave 0: Foundation Setup, DB Materialization & Contract Freeze** *(Completed 2026-11-09)*
   - Justin: Alembic migration (port 5432), seed data script against live Supabase, `/log/preview` split, backend test suite, doc contract alignment.
-  - Yadan: Local workspace setup on her machine (`npm install`, `frontend/.env.local`, `npm run build`, `npm run lint`).
-  - **Joint Sync Gate 0**: Verify live DB, health check, frozen exercise vocabulary (`ex_bench`, `ex_squat`, `ex_row`).
-- [ ] **Wave 1: In-Gym Logging Loop & Workout Logger (Extraction & Pain Detection)**
+  - Yadan: Local workspace setup on her machine (`npm install`, `frontend/.env.local`, `npm run build`, `npm run lint`), verified Sarah's live session link.
+  - **Joint Sync Gate 0**: Passed 2026-11-09. Live Supabase DB verified, Sarah's session loaded by Yadan, canonical vocabulary frozen, 21 backend tests passing.
+- [ ] **Wave 1: In-Gym Logging Loop & Workout Logger (Extraction & Pain Detection)** *(ACTIVE WAVE)*
   - Justin: Backend endpoints (`/log/preview`, `/log`), idempotency validation, deterministic eval test suite.
   - Yadan: Workout Logger agent harness (Claude Sonnet 5.5), confirmation card UI, Web Speech API dictation, `localStorage` buffer, mobile-browser-compatible client UX.
   - **Joint Sync Gate 1**: End-to-end mobile logging with inline typo correction and idempotency check.
@@ -60,7 +60,7 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 
 ### 🔎 Open Items from Yadan's Repo Review (2026-11-09)
 - [x] **1. Builder lanes (Decided 2026-11-09)**: Justin takes Trainer Assistant agent, Progression Planner agent, and backend development. Yadan takes Workout Logger agent, frontend development, and mobile-browser-compatible UX. UX distinction: client flow is mobile-first for gym floor; trainer dashboard is PC/desktop-first with mobile responsiveness for on the go. Progression nuance: Yadan decides how progression is calculated, and Justin integrates the math into the engine.
-- [x] **2. Wave 0 Status & Setup (Decided 2026-11-09)**: Marked in progress. Justin completed backend migrations, live Supabase database materialization, seed script, and contract tests. Yadan confirmed `npm install`, `npm run build`, `npm run lint`, and `tsc` all pass on `develop`, and `/`, `/s/:token`, and `/trainer` load cleanly. Still open for Joint Sync Gate 0: populating `frontend/.env.local` with live Supabase values and verifying the client session link against the live backend/database.
+- [x] **2. Wave 0 Status & Setup (Completed 2026-11-09)**: Closed out. Justin completed backend migrations, live Supabase database materialization, seed script, and contract tests. Yadan confirmed `npm install`, `npm run build`, `npm run lint`, and `tsc` all pass on `develop`, populated `frontend/.env.local`, and successfully loaded Sarah's live session link (`/s/:token`). Joint Sync Gate 0 passed.
 - [x] **3. Intake Scope (Decided 2026-11-09 - Option B)**: Both trainer and client can enter goals and injury information. Clients can enter/update via the Workout Logger agent or session profile; trainers can enter/update via the Trainer Assistant agent or dashboard form. Autonomy exists for both sides to use agents, while Human-in-the-Loop stands: trainer retains ultimate authority to manually review and override goals and injury records.
 - [x] **4. Integration branch (Decided 2026-11-09)**: Stay on `develop` until the app works, then merge to `main`. See section 4.
 

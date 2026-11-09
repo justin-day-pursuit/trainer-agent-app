@@ -261,14 +261,14 @@ flowchart TD
 - Verify `src/lib/api.ts` has type-safe fetch helpers for GET, POST, PUT, DELETE.
 - Review canonical exercise vocabulary and API endpoint contracts; confirm alignment with backend changes.
 
-#### 🤝 Joint Sync Gate 0 (Checklist before Wave 1)
-- [ ] Database tables materialized in Supabase via Alembic (using port `5432` for migration).
-- [ ] Seed script executed; Sarah's profile and plan accessible via the printed session token.
-- [ ] Backend starts cleanly: `http://localhost:8000/health` returns `{"status": "ok", ...}`.
-- [ ] Frontend starts cleanly: `http://localhost:3000` displays landing page.
-- [ ] Exercise vocabulary frozen: All code, seed data, docs, and tests use `ex_bench`, `ex_squat`, `ex_row` with field name `sets`.
-- [ ] API contracts in `05-api-reference.md` updated to reflect preview/commit split, health response, and canonical IDs.
-- [ ] Both builders confirm integration branch target (`develop` as staging, PRs into `main`).
+#### 🤝 Joint Sync Gate 0 (Checklist before Wave 1) - COMPLETED 2026-11-09
+- [x] Database tables materialized in Supabase via Alembic (using port `5432` for migration).
+- [x] Seed script executed; Sarah's profile and plan accessible via the printed session token.
+- [x] Backend starts cleanly: `http://localhost:8000/health` returns `{"status": "ok", ...}`.
+- [x] Frontend starts cleanly: `http://localhost:3000` displays landing page; Yadan verified loading Sarah's session (`/s/:token`).
+- [x] Exercise vocabulary frozen: All code, seed data, docs, and tests use `ex_bench`, `ex_squat`, `ex_row` with field name `sets`.
+- [x] API contracts in `05-api-reference.md` updated to reflect preview/commit split, health response, and canonical IDs.
+- [x] Both builders confirm integration branch target (`develop` as staging, PRs into `main`).
 
 ---
 
