@@ -8,7 +8,7 @@ Defines the structured shapes for:
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -29,6 +29,10 @@ class ExtractedSet(BaseModel):
     reps: int = Field(..., description="Repetitions completed")
     pain_flag: bool = Field(default=False, description="True if the client reported pain or joint pinching")
     note: Optional[str] = Field(None, description="Client feedback, e.g. 'felt easy', 'pinching in right shoulder'")
+    effort: Optional[Literal["easy", "challenging"]] = Field(
+        None,
+        description="How the last two reps of this exercise felt. Decides whether the exercise progresses next week.",
+    )
 
 
 class SafetyFlag(BaseModel):
