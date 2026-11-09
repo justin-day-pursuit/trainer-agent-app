@@ -305,7 +305,7 @@ export default function TrainerDashboardPage() {
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Active Agents: 3 (Intake, Progression, Monitor)</span>
         </div>
-        <div>Model: Claude 3.5 Sonnet</div>
+        <div>Model: Claude 3.7 Sonnet</div>
       </footer>
     </div>
   );

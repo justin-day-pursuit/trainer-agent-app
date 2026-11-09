@@ -128,7 +128,7 @@ Parses client voice or chat text using Agent 1 without committing to the databas
   "clarifying_question": null,
   "has_pain_flag": true,
   "pain_summary": "Shoulder discomfort noted on Bench Press",
-  "model_name": "claude-sonnet-4-5-20250929",
+  "model_name": "claude-3-7-sonnet-20250219",
   "execution_time_ms": 240.5
 }
 ```

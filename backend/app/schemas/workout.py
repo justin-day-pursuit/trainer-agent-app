@@ -82,7 +82,7 @@ class WorkoutLogPreviewResponse(BaseModel):
     clarifying_question: Optional[str] = Field(None, description="Question asked if input was ambiguous")
     has_pain_flag: bool = False
     pain_summary: Optional[str] = None
-    model_name: str = Field(default="claude-sonnet-4-5-20250929", description="Model used for extraction")
+    model_name: str = Field(default="claude-3-7-sonnet-20250219", description="Model used for extraction")
     execution_time_ms: float = Field(default=0.0, description="Inference time in milliseconds")
 
 

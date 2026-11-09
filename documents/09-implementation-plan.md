@@ -48,10 +48,10 @@ flowchart TD
 
     subgraph BackendAPI ["FastAPI Async REST API"]
         D["Dual Auth Layer: Supabase JWT + UUID Token"]
-        E["Agent 1: Intake & Workout Logger (Sonnet 4.5)"]
+        E["Agent 1: Intake & Workout Logger (Sonnet 3.7)"]
         F["Deterministic Progression Engine (Python Protocol)"]
-        G["Agent 2: Safety & Injury Cross-Checker (Haiku 4.5)"]
-        H["Agent 3: Adherence & Triage Assistant (Sonnet 4.5)"]
+        G["Agent 2: Safety & Injury Cross-Checker (Haiku 3.5)"]
+        H["Agent 3: Adherence & Triage Assistant (Sonnet 3.7)"]
     end
 
     subgraph DataStore ["Supabase Managed Cloud"]
@@ -270,13 +270,13 @@ flowchart TD
 #### 🛠️ Justin's Lane (Agent 1 Live Harness & Backend Endpoint)
 
 **Task 1.1: Live Anthropic Claude Wiring in `IntakeLoggingAgent`**
-- In `backend/app/agents/intake_agent.py`, replace mock returns with live Anthropic SDK call (`client.messages.create`) targeting `claude-sonnet-4-5-20250929`.
+- In `backend/app/agents/intake_agent.py`, replace mock returns with live Anthropic SDK call (`client.messages.create`) targeting `claude-3-7-sonnet-20250219` (Claude 3.7 Sonnet).
 - Wrap client input strictly in `<CLIENT_CHAT_DATA source="untrusted_client_input">` XML tags.
 - Include the canonical exercise vocabulary (`ex_bench`, `ex_squat`, `ex_row`) directly in the system prompt so Agent 1 maps client text to known IDs.
 - Enforce output schema: `exercise_id`, `set_num`, `weight_lbs`, `reps`, `pain_flag`, `note`.
 - Parse response with Pydantic schema validation (`List[ExtractedSet]`). Handle malformed JSON with 1-shot retry.
 - Return `status: "complete"` with extracted sets, or `status: "incomplete"` with a single `clarifying_question` (Case 3 behavior).
-- Front-facing conversational extraction benefits from Sonnet's high reasoning capability to handle messy, colloquial, and voice-dictated gym inputs while accurately identifying subtle pain cues.
+- Front-facing conversational extraction benefits from Claude 3.7 Sonnet's high reasoning capability to handle messy, colloquial, and voice-dictated gym inputs while accurately identifying subtle pain cues.
 
 **Task 1.2: Preview Endpoint Wiring**
 - Wire `POST /api/v1/s/{token}/log/preview` to invoke the live `IntakeLoggingAgent`.
@@ -301,8 +301,8 @@ flowchart TD
 - The current `/s/[token]/page.tsx` has both a hardcoded set grid AND a chat input box — these are redundant. Replace the grid with the Agent 1 confirmation card flow:
   1. Client types or dictates in the chat input (keep the existing `localStorage`-backed text area).
   2. Client taps "Preview Workout" → calls `POST /api/v1/s/{token}/log/preview`.
-  3. **While waiting**: Display loading state with spinner and model name text: *"Agent 1 analyzing workout with claude-sonnet-4-5-20250929..."*
-  4. **On success**: Render the inline editable confirmation card showing extracted sets. Tapping weight or reps opens a numeric input for 1-tap correction. Display amber badge if `pain_flag: true` with editable pain summary note. Display success badge: *"Extracted by claude-sonnet-4-5-20250929 in 840ms"*.
+  3. **While waiting**: Display loading state with spinner and model name text: *"Agent 1 analyzing workout with claude-3-7-sonnet-20250219..."*
+  4. **On success**: Render the inline editable confirmation card showing extracted sets. Tapping weight or reps opens a numeric input for 1-tap correction. Display amber badge if `pain_flag: true` with editable pain summary note. Display success badge: *"Extracted by claude-3-7-sonnet-20250219 in 840ms"*.
   5. **On `status: "incomplete"`**: Display Agent 1's clarifying question in a chat bubble. Client types answer and re-submits preview.
   6. **On failure/timeout**: Display error message with a **retry button that stays unlocked**. Raw text remains in `localStorage`.
   7. Client taps "Confirm & Save Workout" → calls `POST /api/v1/s/{token}/log` with confirmed sets and a `client_request_id` (generated UUID stored in `localStorage`).
@@ -361,7 +361,7 @@ flowchart TD
   - Returns the newly created draft plan ID.
 
 **Task 2.3: Live Anthropic Claude Wiring in `ProgressionPlanAgent` (Agent 2)**
-- In `backend/app/agents/progression_agent.py`, wire `claude-haiku-4-5-20251001`.
+- In `backend/app/agents/progression_agent.py`, wire `claude-3-5-haiku-20241022` (Claude 3.5 Haiku).
 - Backend progression calculations are handled deterministically by the Python math engine (`SimpleLinearProgression`), so Agent 2 operates as a fast, low-cost safety cross-check rather than generating programs from scratch.
 - Pass 3 read-only inputs: (1) Client intake injury notes, (2) Recent workout pain flags, (3) Proposed weights from deterministic engine.
 - Enforce system prompt boundary: Agent 2 outputs warning flags and explanation text, but **never alters weight integers**.
@@ -412,8 +412,8 @@ flowchart TD
 #### 🛠️ Justin's Lane (Adherence Evaluation & Client Management API)
 
 **Task 3.1: Live Anthropic Claude Wiring in `TrainerAssistantAgent` (Agent 3)**
-- In `backend/app/agents/trainer_agent.py`, wire `claude-sonnet-4-5-20250929`.
-- As a front-facing trainer support agent, Sonnet provides higher-empathy tone calibration and nuanced phrasing when synthesizing multi-day client inactivity reasons into pre-drafted check-in messages.
+- In `backend/app/agents/trainer_agent.py`, wire `claude-3-7-sonnet-20250219` (Claude 3.7 Sonnet).
+- As a front-facing trainer support agent, Claude 3.7 Sonnet provides higher-empathy tone calibration and nuanced phrasing when synthesizing multi-day client inactivity reasons into pre-drafted check-in messages.
 - Urgency is computed **deterministically in Python**, not by the model:
   - High: No log in $>7$ days OR active pain flag on most recent log.
   - Medium: No log in $>4$ days.
