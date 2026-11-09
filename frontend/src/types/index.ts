@@ -13,6 +13,8 @@ export interface PrescribedExercise {
   target_weight_lbs: number | null;
 }
 
+export type Effort = "easy" | "challenging";
+
 export interface ExtractedSet {
   exercise_id: string;
   set_num: number;
@@ -20,6 +22,7 @@ export interface ExtractedSet {
   reps: number;
   pain_flag: boolean;
   note?: string | null;
+  effort?: Effort | null;
 }
 
 export interface SafetyFlag {

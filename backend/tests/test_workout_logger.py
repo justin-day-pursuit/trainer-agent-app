@@ -8,6 +8,7 @@ Verifies the rules the harness enforces whatever the model returns.
 from unittest.mock import AsyncMock
 
 import pytest
+from pydantic import ValidationError
 
 from app.agents.intake_agent import (
     WorkoutExtraction,
@@ -74,3 +75,11 @@ def test_client_text_cannot_close_the_data_tag():
     )
     assert wrapped.count("</CLIENT_CHAT_DATA>") == 1
     assert "source='untrusted_client_input'" in wrapped
+
+
+def test_effort_is_optional_and_limited_to_the_two_choices():
+    assert bench_set().effort is None
+    rated = ExtractedSet(exercise_id="ex_bench", set_num=1, reps=10, effort="easy")
+    assert rated.model_dump()["effort"] == "easy"
+    with pytest.raises(ValidationError):
+        ExtractedSet(exercise_id="ex_bench", set_num=1, reps=10, effort="medium")

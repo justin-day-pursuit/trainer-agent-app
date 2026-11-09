@@ -26,7 +26,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
-import type { ExtractedSet, PrescribedExercise } from "@/types";
+import type { Effort, ExtractedSet, PrescribedExercise } from "@/types";
 
 const LOGGER_MODEL = "claude-sonnet-5-5";
 const PREVIEW_TIMEOUT_MS = 60000;
@@ -62,6 +62,7 @@ interface EditableSet {
   reps: string;
   painFlag: boolean;
   note: string;
+  effort: Effort | null;
 }
 
 interface Draft {
@@ -110,6 +111,7 @@ function toEditable(sets: ExtractedSet[]): EditableSet[] {
     reps: String(set.reps),
     painFlag: set.pain_flag,
     note: set.note ?? "",
+    effort: set.effort ?? null,
   }));
 }
 
@@ -298,6 +300,13 @@ export default function ClientSessionPage() {
     updateDraft({ sets: (draft.sets ?? []).map((set) => (set.key === key ? { ...set, ...patch } : set)) });
   };
 
+  // Effort is asked once per exercise, then applied to all of that exercise's sets
+  const setEffort = (exerciseId: string, effort: Effort) => {
+    updateDraft({
+      sets: (draft.sets ?? []).map((set) => (set.exerciseId === exerciseId ? { ...set, effort } : set)),
+    });
+  };
+
   const removeSet = (key: string) => {
     updateDraft({ sets: (draft.sets ?? []).filter((set) => set.key !== key) });
   };
@@ -309,8 +318,12 @@ export default function ClientSessionPage() {
 
   const sets = draft.sets ?? [];
   const hasPain = sets.some((set) => set.painFlag);
+  const effortFor = (exerciseId: string): Effort | null =>
+    sets.find((set) => set.exerciseId === exerciseId && set.effort)?.effort ?? null;
+  const effortsAnswered = sets.every((set) => effortFor(set.exerciseId) !== null);
   const setsAreValid =
     sets.length > 0 &&
+    effortsAnswered &&
     sets.every(
       (set) =>
         /^\d+$/.test(set.reps) && (set.weight === "" || /^\d+(\.\d+)?$/.test(set.weight))
@@ -332,6 +345,7 @@ export default function ClientSessionPage() {
         reps: Number(set.reps),
         pain_flag: set.painFlag,
         note: set.note || null,
+        effort: effortFor(set.exerciseId),
       };
     });
 
@@ -532,6 +546,27 @@ export default function ClientSessionPage() {
                         </button>
                       </div>
                     ))}
+
+                    <div className="pt-1">
+                      <p className="text-sm font-semibold text-ink mb-1.5">How did the last two reps feel?</p>
+                      <div className="flex gap-2">
+                        {(["easy", "challenging"] as const).map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => setEffort(group.id, option)}
+                            aria-pressed={effortFor(group.id) === option}
+                            className={`touch-target flex-1 rounded-full border text-sm font-semibold capitalize ${
+                              effortFor(group.id) === option
+                                ? "bg-action text-on-action border-action"
+                                : "bg-ground text-ink-2 border-hairline"
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ))}
 
@@ -550,6 +585,10 @@ export default function ClientSessionPage() {
                 {draft.badge && <p className="text-xs text-muted">{draft.badge}</p>}
 
                 {errorMessage && <p className="text-sm text-warn">{errorMessage}</p>}
+
+                {!effortsAnswered && (
+                  <p className="text-sm text-ink-2">Choose how each exercise felt to save.</p>
+                )}
 
                 <button
                   type="button"
