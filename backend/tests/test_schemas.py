@@ -98,7 +98,7 @@ def test_workout_log_preview_response_schema():
         ],
         has_pain_flag=True,
         pain_summary="Shoulder discomfort noted on set 3",
-        model_name="claude-haiku-4-5-20251001",
+        model_name="claude-sonnet-4-5-20250929",
         execution_time_ms=210.5,
     )
     assert preview.status == "complete"

@@ -41,7 +41,7 @@ class IntakeLoggingAgent(BaseAgentHarness):
             agent_name="Agent1_ClientLoggingAgent",
             system_prompt=AGENT_1_SYSTEM_PROMPT.strip(),
             max_steps=5,
-            model_name="claude-haiku-4-5-20251001",
+            model_name="claude-sonnet-4-5-20250929",
         )
         # Register extraction tool interface
         self.register_tool(

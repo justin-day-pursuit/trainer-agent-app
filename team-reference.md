@@ -37,15 +37,15 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
   - Yadan: Frontend Node environment setup (`npm install`), `.env.local`, type verification.
   - **Joint Sync Gate 0**: Verify live DB, health check, frozen exercise vocabulary (`ex_bench`, `ex_squat`, `ex_row`).
 - [ ] **Wave 1: In-Gym Logging Loop & Agent 1 (Extraction & Pain Detection)**
-  - Justin: Live Claude Haiku wiring, preview/commit endpoints, deterministic eval test suite.
+  - Justin: Live Claude Sonnet wiring, preview/commit endpoints, deterministic eval test suite.
   - Yadan: Replace set grid with editable confirmation card, Web Speech API dictation button, `localStorage` buffer.
   - **Joint Sync Gate 1**: End-to-end mobile logging with inline typo correction and idempotency check.
 - [ ] **Wave 2: Deterministic Progression Engine & Agent 2 (Safety Cross-Check & Trainer Review)**
-  - Justin: Per-exercise progression engine (+5 lbs compound), weekly planning service, Agent 2 safety harness (Sonnet), archive-on-approve.
+  - Justin: Per-exercise progression engine (+5 lbs compound), weekly planning service, Agent 2 safety harness (Haiku), archive-on-approve.
   - Yadan: Trainer plan review queue, visual delta cards (+5 lbs / held), 1-click approve & inline edit UI.
   - **Joint Sync Gate 2**: End-to-end progression loop with shoulder pain hold and trainer approval.
 - [ ] **Wave 3: Agent 3 (Triage, Adherence & Outreach) & Trainer Admin Suite**
-  - Justin: Agent 3 backend service (Haiku, urgency in Python), triage feed & dismissal API, client session generation endpoint.
+  - Justin: Agent 3 backend service (Sonnet, urgency in Python), triage feed & dismissal API, client session generation endpoint.
   - Yadan: Trainer triage feed UI, dismiss alerts, client roster table, add client & link generator modal.
   - **Joint Sync Gate 3**: Inactivity detection, outreach message drafting, session link generation.
 - [ ] **Wave 4: Security Hardening & Production Deployment**

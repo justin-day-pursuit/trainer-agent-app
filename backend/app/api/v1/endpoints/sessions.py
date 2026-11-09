@@ -105,7 +105,7 @@ async def preview_workout_log(
             clarifying_question="Looks like you haven't logged your sets yet. Did you hit the prescribed exercises today?",
             has_pain_flag=False,
             pain_summary=None,
-            model_name="claude-haiku-4-5-20251001",
+            model_name="claude-sonnet-4-5-20250929",
             execution_time_ms=round(elapsed_ms, 2),
         )
 
@@ -156,7 +156,7 @@ async def preview_workout_log(
         clarifying_question=None,
         has_pain_flag=pain_flag,
         pain_summary="Shoulder pinching reported on Bench Press" if pain_flag else None,
-        model_name="claude-haiku-4-5-20251001",
+        model_name="claude-sonnet-4-5-20250929",
         execution_time_ms=round(elapsed_ms, 2),
     )
 

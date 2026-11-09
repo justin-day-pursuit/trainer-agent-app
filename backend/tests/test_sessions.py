@@ -44,7 +44,7 @@ def test_preview_workout_log_case_1():
     assert data["status"] == "complete"
     assert len(data["extracted_sets"]) >= 3
     assert data["has_pain_flag"] is False
-    assert data["model_name"] == "claude-haiku-4-5-20251001"
+    assert data["model_name"] == "claude-sonnet-4-5-20250929"
     assert data["execution_time_ms"] >= 0
 
 

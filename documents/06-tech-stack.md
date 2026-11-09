@@ -66,11 +66,13 @@ This document provides a comprehensive analysis of the architectural choices, de
 
 ### 2.6. AI & Reasoning Engine: Anthropic Claude API
 - **Choice**: **Anthropic Claude API** (via `httpx` async client)
-  - **Agent 1 (Intake & Logging)**: `claude-haiku-4-5-20251001` (sub-second latency, low token cost, high JSON accuracy).
-  - **Agent 2 (Progression & Safety)**: `claude-sonnet-4-5-20250929` (nuanced medical/safety reasoning and cross-referencing).
-  - **Agent 3 (Trainer Assistant)**: `claude-haiku-4-5-20251001` (fast summary synthesis and friendly draft generation).
+  - **Agent 1 (Client Intake & Logging - Front-Facing)**: `claude-sonnet-4-5-20250929` (nuanced conversational reasoning for noisy gym chat/voice inputs, precise set extraction, pain signal detection, and single clarifying questions).
+  - **Agent 2 (Progression Safety Cross-Check - Backend)**: `claude-haiku-4-5-20251001` (fast, cost-effective read-only validation; weekly weight deltas are computed deterministically by the Python math engine, so Haiku solely cross-references proposed deltas against logged injury profiles and pain notes).
+  - **Agent 3 (Trainer Support & Adherence - Front-Facing)**: `claude-sonnet-4-5-20250929` (high-empathy outreach draft generation, sophisticated multi-client adherence analysis, and contextual triage summaries for the trainer review queue).
 - **Rationale**:
-  - Superior instruction following and strict adherence to negative boundaries (*"NEVER alter weight integers"*).
+  - Superior instruction following and strict adherence to negative boundaries (*"NEVER alter weight integers"*, *"NEVER message clients directly"*).
+  - Front-facing user experiences (clients in noisy gyms, trainers reviewing client comms) receive the highest reasoning quality with Sonnet 4.5.
+  - Backend progression logic keeps token costs and latency low with Haiku 4.5 because program progression is already deterministic in code.
   - Structured tool calling and reliable JSON outputs.
 - **Alternatives Considered**:
   - *OpenAI GPT-4o / GPT-4o-mini*: Viable alternative, but Claude demonstrated higher fidelity in following negative system prompt constraints during evaluation.
