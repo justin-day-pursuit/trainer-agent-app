@@ -59,10 +59,15 @@ The **Trainer Progression App** solves this through a mobile-browser-first, mult
 
 ## 4. Functional Requirements
 
-### Client Experience & Intake
+### Client Experience & Dual Intake (Option B)
 - **FR-1: Zero-Account Access via Session Links**
   - Clients access the application exclusively via unique, unguessable cryptographic URLs: `/s/:session_token`.
   - The session token securely binds the client to their specific trainer and profile without requiring email or password authentication.
+- **FR-1b: Dual Autonomous Intake & Profile Management (Option B)**
+  - Both trainer and client have autonomy to enter and update fitness goals, experience level, and anatomical injury history:
+    - **Client Intake Path**: Clients can enter, update, or clarify their primary goals and injury history through their mobile session link (`/s/:token`), using conversational chat with the Workout Logger or an intake profile view.
+    - **Trainer Intake Path**: Trainers can enter or modify client goals and injury restrictions manually via the "Add/Edit Client" modal or conversationally using the Trainer Assistant.
+    - **Human-in-the-Loop Safeguard**: The trainer retains ultimate authority and can view, review, edit, or override any client-entered goals or injury notes directly on the dashboard.
 - **FR-2: Conversational Workout Logging**
   - Clients enter natural language text or paste mobile voice-to-text transcripts into a primary chat interface (e.g., *"Bench 135 for 3 sets of 10. Shoulder felt fine, last set was tough"*).
 - **FR-3: Structured Set & Rep Extraction (Workout Logger)**

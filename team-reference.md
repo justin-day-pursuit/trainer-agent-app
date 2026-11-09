@@ -32,21 +32,21 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 ### 🎯 What To Do (Active Sprints & Waves)
 > Refer to the detailed breakdown in [**`documents/09-implementation-plan.md`**](./documents/09-implementation-plan.md).
 
-- [x] **Wave 0: Foundation Setup, DB Materialization & Contract Freeze**
-  - Justin: Alembic migration (port 5432), seed data script (real GoTrue user, real UUID session), `/log/preview` split, doc contract alignment.
-  - Yadan: Frontend Node environment setup (`npm install`), `.env.local`, type verification.
+- [ ] **Wave 0: Foundation Setup, DB Materialization & Contract Freeze** *(In Progress)*
+  - Justin: Alembic migration (port 5432), seed data script against live Supabase, `/log/preview` split, backend test suite, doc contract alignment.
+  - Yadan: Local workspace setup on her machine (`npm install`, `frontend/.env.local`, `npm run build`, `npm run lint`).
   - **Joint Sync Gate 0**: Verify live DB, health check, frozen exercise vocabulary (`ex_bench`, `ex_squat`, `ex_row`).
 - [ ] **Wave 1: In-Gym Logging Loop & Workout Logger (Extraction & Pain Detection)**
-  - Justin: Live Claude Sonnet 5.5 wiring, preview/commit endpoints, deterministic eval test suite.
-  - Yadan: Replace set grid with editable confirmation card, Web Speech API dictation button, `localStorage` buffer.
+  - Justin: Backend endpoints (`/log/preview`, `/log`), idempotency validation, deterministic eval test suite.
+  - Yadan: Workout Logger agent harness (Claude Sonnet 5.5), confirmation card UI, Web Speech API dictation, `localStorage` buffer, mobile-browser-compatible client UX.
   - **Joint Sync Gate 1**: End-to-end mobile logging with inline typo correction and idempotency check.
 - [ ] **Wave 2: Deterministic Progression Engine & Progression Planner (Safety Cross-Check & Trainer Review)**
-  - Justin: Per-exercise progression engine (+5 lbs compound), weekly planning service, Progression Planner safety harness (Claude Haiku 5.5), archive-on-approve.
-  - Yadan: Trainer plan review queue, visual delta cards (+5 lbs / held), 1-click approve & inline edit UI.
+  - Yadan: Formulate progression calculation rules/math; trainer plan review queue, visual delta cards (+5 lbs / held), 1-click approve & inline edit UI.
+  - Justin: Implement progression calculation engine to Yadan's specifications, Progression Planner safety harness (Claude Haiku 5.5), weekly planning service, archive-on-approve API.
   - **Joint Sync Gate 2**: End-to-end progression loop with shoulder pain hold and trainer approval.
 - [ ] **Wave 3: Trainer Assistant (Triage, Adherence & Outreach) & Trainer Admin Suite**
   - Justin: Trainer Assistant backend service (Claude Sonnet 5.5, urgency in Python), triage feed & dismissal API, client session generation endpoint.
-  - Yadan: Trainer triage feed UI, dismiss alerts, client roster table, add client & link generator modal.
+  - Yadan: Trainer triage feed UI, dismiss alerts, client roster table, add client & link generator modal (PC-browser-optimized with mobile responsiveness).
   - **Joint Sync Gate 3**: Inactivity detection, outreach message drafting, session link generation.
 - [ ] **Wave 4: Security Hardening & Production Deployment**
   - Justin: Audit trace review, Render backend deployment, full test suite execution.
@@ -55,14 +55,14 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 
 ### ⚠️ Issues Needing Resolution (Blockers & Decisions)
 - [ ] **Decision 1: Mobile Speech-to-Text Strategy**: Evaluate browser-native Web Speech API vs server-side Whisper via HTTPX. *Recommendation*: Use Web Speech API for instant client-side dictation, fallback to audio upload if browser support is missing.
-- [ ] **Decision 2: Progression Rule Nuances**: Define specific rep target bands (e.g., compound lifts +5 lbs on $3 \times 10$, isolation lifts +2.5 lbs or rep progression before weight progression).
+- [ ] **Decision 2: Progression Rule Nuances**: Yadan to define specific rep target bands and progression rules (e.g., compound lifts +5 lbs on $3 \times 10$, isolation lifts +2.5 lbs or rep progression before weight progression) for Justin to implement in the Python engine.
 - [ ] **Decision 3: Trainer Client Import**: Determine whether an import parser for Google Sheets/CSV is needed in Phase 2 or deferred to post-MVP.
 
 ### 🔎 Open Items from Yadan's Repo Review (2026-11-09)
-- [ ] **1. Builder lanes (Justin to confirm with Yadan)**: On Slack, Justin suggested Yadan take the client-facing agent and the week-to-week progression calculation. `documents/09-implementation-plan.md` gives both to Justin and puts Yadan on frontend and mobile UX. Pick one and update the plan to match.
-- [ ] **2. Yadan's Wave 0 status (updated 2026-11-09)**: `npm install`, `npm run build`, `npm run lint`, and `tsc` all pass on `develop`, and `/`, `/s/:token`, and `/trainer` load with no errors. Still open: the Supabase values in `frontend/.env.local`, and the backend has not been run on Yadan's machine yet. The Joint Sync Gate 0 checklist in the plan is still unchecked. Heads up for Waves 1 and 2: `/s/:token` and `/trainer` show hardcoded sample data and nothing calls `apiFetch` yet.
-- [ ] **3. Intake is smaller than the PRD**: The PRD has the client filling out an intake form, with AI flagging missing answers and drafting a summary. `documents/03-user-flows.md` has the trainer entering goals and injury notes by hand. Decide whether to keep the smaller version and update the PRD, or build the form.
-- [x] **4. Integration branch (decided 2026-11-09)**: Stay on `develop` until the app works, then merge to `main`. See section 4.
+- [x] **1. Builder lanes (Decided 2026-11-09)**: Justin takes Trainer Assistant agent, Progression Planner agent, and backend development. Yadan takes Workout Logger agent, frontend development, and mobile-browser-compatible UX. UX distinction: client flow is mobile-first for gym floor; trainer dashboard is PC/desktop-first with mobile responsiveness for on the go. Progression nuance: Yadan decides how progression is calculated, and Justin integrates the math into the engine.
+- [x] **2. Wave 0 Status & Setup (Decided 2026-11-09)**: Marked in progress. Justin completed backend migrations, live Supabase database materialization, seed script, and contract tests. Yadan confirmed `npm install`, `npm run build`, `npm run lint`, and `tsc` all pass on `develop`, and `/`, `/s/:token`, and `/trainer` load cleanly. Still open for Joint Sync Gate 0: populating `frontend/.env.local` with live Supabase values and verifying the client session link against the live backend/database.
+- [x] **3. Intake Scope (Decided 2026-11-09 - Option B)**: Both trainer and client can enter goals and injury information. Clients can enter/update via the Workout Logger agent or session profile; trainers can enter/update via the Trainer Assistant agent or dashboard form. Autonomy exists for both sides to use agents, while Human-in-the-Loop stands: trainer retains ultimate authority to manually review and override goals and injury records.
+- [x] **4. Integration branch (Decided 2026-11-09)**: Stay on `develop` until the app works, then merge to `main`. See section 4.
 
 ### 🎬 Final Project Submission (Due Wed, Nov 11, 12:00 PM, group)
 A 5-minute presentation, submitted through the Google Form:

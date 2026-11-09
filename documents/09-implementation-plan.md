@@ -31,9 +31,9 @@ Crucially, when clients report minor joint discomfort or pain in casual messages
 | :--- | :--- | :--- |
 | **Role** | Independent Strength & Rehab Coach | Busy Working Professional / Athlete |
 | **Roster / Context** | 24 hybrid clients (in-person + remote) | Crowded commercial gym, peak hours |
-| **Device** | Mobile phone between gym sessions | Mobile browser (Safari/Chrome) |
-| **Key Friction** | Spreadsheet programming fatigue | Sweaty-hand form typing, account passwords |
-| **Non-Negotiable** | Legal & ethical liability — demands 100% control over all progressions | Instant log confirmation, zero passwords/logins, zero data loss |
+| **Device & UX Profile** | **PC/Desktop browser primary** for deep roster management, weekly review queue, and program adjustments; **Mobile browser responsive** for on-the-go triage and link generation. | **Mobile browser strictly** (Safari/Chrome) for one-handed floor logging, large touch targets, voice dictation, and zero logins. |
+| **Key Friction** | Spreadsheet programming fatigue, multi-app context switching | Sweaty-hand form typing, account passwords, losing in-progress notes |
+| **Non-Negotiable** | Legal & ethical liability — demands 100% control over all progressions and profile overrides | Instant log confirmation, zero passwords/logins, zero data loss (`localStorage`) |
 
 ---
 
@@ -140,12 +140,21 @@ The following issues exist in the current scaffolding and are addressed by speci
 | | **Builder 1: Justin Day** | **Builder 2: Yadan Taino** |
 | :--- | :--- | :--- |
 | **Primary Tooling** | Cursor (Grok/Claude/GPT), Gemini (Antigravity) | Claude Code / Claude CLI |
-| **Primary Domain** | Backend & Data Core | Mobile Frontend & UX |
-| **Owns** | FastAPI endpoints, DB migrations & seeds, deterministic progression engine, Anthropic Claude agent harnesses & eval tests, Render deployment | Next.js 15 App Router, Tailwind CSS v4 mobile-first styling, voice dictation & tap interactions, trainer triage & approval UI, Vercel deployment |
+| **Primary Domain** | Backend Development, Data Core & Planner Agents | Frontend Development, Mobile UX & Workout Logger Agent |
+| **Owns** | FastAPI backend endpoints, DB migrations & seeds, Progression Planner agent harness (`claude-haiku-5-5`), Trainer Assistant agent harness (`claude-sonnet-5-5`), Python progression engine integration, backend eval tests, Render deployment | Next.js 15 App Router, Tailwind CSS v4 styling, mobile-browser-compatible client logging UX, PC-browser-optimized trainer dashboard UI (responsive for mobile triage), Workout Logger live agent harness (`claude-sonnet-5-5`), formulation of progression calculation rules/math, Vercel deployment |
+
+### Key Architectural & Ownership Nuances
+1. **Progression Math Authority**: Yadan is the decider of how week-to-week progression is calculated (rep target bands, compound vs isolation deltas, deload thresholds). Justin implements and executes Yadan's progression formulas deterministically in Python (`app/services/progression_engine.py`).
+2. **Device & UX Distinction**:
+   - **Client Experience**: Mobile-browser-compatible (`/s/:token`) designed strictly for one-handed floor use in commercial gym settings (large tap targets, voice dictation, keystroke `localStorage` protection).
+   - **Trainer Experience**: PC/Desktop-browser-optimized (`/trainer`) for comprehensive client roster review, multi-exercise visual delta inspection, and weekly programming adjustments, with responsive mobile compatibility for on-the-go triage.
+3. **Dual Intake Autonomy (Option B)**:
+   - Both trainer and client have autonomy to enter and update fitness goals and injury profiles. Clients can provide context via mobile session chat/intake card; trainers can enter context via the Trainer Assistant or dashboard modal.
+   - The trainer retains ultimate Human-in-the-Loop authority to review, edit, and override any client-entered goals or injury notes.
 
 ### Collaboration & Branch Discipline
-- **Integration Branch**: `develop` for active work. PRs merge into `main` for releases. Both builders agree on one integration target at Wave 0 kickoff.
-- **Branch Naming**: Feature branches follow `feat/<wave>-<builder>-<task-name>` (e.g. `feat/w1-justin-agent1-harness`, `feat/w1-yadan-client-logging-ui`).
+- **Integration Branch**: `develop` for active work. PRs merge into `main` for releases.
+- **Branch Naming**: Feature branches follow `feat/<wave>-<builder>-<task-name>` (e.g. `feat/w1-yadan-workout-logger-harness`, `feat/w1-justin-endpoints`).
 - **Lane Ownership**: Respect file ownership during active waves. Changes to shared contracts (`schemas/`, `types/`) must be agreed upon during wave kickoff.
 - **Joint Integration Gates**: Neither builder proceeds to the next wave until their joint integration gate checklist passes on the shared branch.
 
@@ -156,16 +165,16 @@ The following issues exist in the current scaffolding and are addressed by speci
 ```mermaid
 flowchart TD
     subgraph Wave0 ["Wave 0: Foundation & DB Materialization"]
-        W0_J["Justin: Alembic Migration, Seed, API Fixes"]
-        W0_Y["Yadan: Frontend Setup & Contract Review"]
+        W0_J["Justin: Alembic Migration, Live Supabase Seed, API Preview/Commit Split"]
+        W0_Y["Yadan: Local Node Setup (npm install, .env.local, build & lint)"]
         W0_Gate{"Joint Sync Gate 0"}
         W0_J --> W0_Gate
         W0_Y --> W0_Gate
     end
 
     subgraph Wave1 ["Wave 1: Client Logging Loop & Workout Logger"]
-        W1_J["Justin: Live Workout Logger Harness, Preview/Commit Split, Evals"]
-        W1_Y["Yadan: Confirmation Card UI, Voice Dictation, Observability"]
+        W1_J["Justin: Preview/Commit API, Idempotency & Deterministic Eval Tests"]
+        W1_Y["Yadan: Workout Logger Live Harness, Confirmation Card UI, Voice Dictation"]
         W1_Gate{"Joint Sync Gate 1"}
         W0_Gate --> W1_J
         W0_Gate --> W1_Y
@@ -174,8 +183,8 @@ flowchart TD
     end
 
     subgraph Wave2 ["Wave 2: Progression Engine & Progression Planner Safety"]
-        W2_J["Justin: Per-Exercise Progression, Progression Planner, Plan Trigger"]
-        W2_Y["Yadan: Plan Review Queue, Delta Cards, Approval UI"]
+        W2_Y["Yadan: Progression Calculation Rules, Plan Review Queue, Delta Cards"]
+        W2_J["Justin: Python Progression Engine Math, Progression Planner Harness, Approval API"]
         W2_Gate{"Joint Sync Gate 2"}
         W1_Gate --> W2_J
         W1_Gate --> W2_Y
@@ -184,8 +193,8 @@ flowchart TD
     end
 
     subgraph Wave3 ["Wave 3: Trainer Assistant Triage & Trainer Administration"]
-        W3_J["Justin: Adherence Service, Session Gen, Dismissal API"]
-        W3_Y["Yadan: Triage Feed, Client Roster, Link Generator"]
+        W3_J["Justin: Trainer Assistant Harness, Adherence Service, Session Link API"]
+        W3_Y["Yadan: Triage Feed UI, Client Roster Table, Add Client Modal"]
         W3_Gate{"Joint Sync Gate 3"}
         W2_Gate --> W3_J
         W2_Gate --> W3_Y
@@ -267,7 +276,7 @@ flowchart TD
 
 **Objective**: Complete the client-side mobile logging flow with observability. The client inputs chat or voice text on `/s/:token`; the Workout Logger parses it into structured sets and pain flags (preview only); the client confirms/edits inline; confirmed sets are saved to PostgreSQL with idempotency protection.
 
-#### 🛠️ Justin's Lane (Workout Logger Live Harness & Backend Endpoint)
+#### 🎨 Yadan's Lane (Workout Logger Live Harness & Mobile Client Logging UI)
 
 **Task 1.1: Live Anthropic Claude Wiring in `WorkoutLoggerAgent`**
 - In `backend/app/agents/intake_agent.py`, replace mock returns with live Anthropic SDK call (`client.messages.create`) targeting `claude-sonnet-5-5` (Claude Sonnet 5.5).
@@ -278,26 +287,7 @@ flowchart TD
 - Return `status: "complete"` with extracted sets, or `status: "incomplete"` with a single `clarifying_question` (Case 3 behavior).
 - Front-facing conversational extraction benefits from Claude Sonnet 5.5's high reasoning capability to handle messy, colloquial, and voice-dictated gym inputs while accurately identifying subtle pain cues.
 
-**Task 1.2: Preview Endpoint Wiring**
-- Wire `POST /api/v1/s/{token}/log/preview` to invoke the live `WorkoutLoggerAgent`.
-- Response includes: `status`, `extracted_sets`, optional `clarifying_question`, and observability metadata (`model_name`, `execution_time_ms`).
-- Record every invocation into `agent_traces` table (execution time, tokens, model name, status).
-
-**Task 1.3: Commit Endpoint Wiring**
-- `POST /api/v1/s/{token}/log` accepts `WorkoutLogConfirm` payload (client-edited sets + `client_request_id`).
-- Enforce unique constraint on `client_request_id` — return HTTP 409 Conflict if duplicate.
-- Persist `WorkoutLog` row with the client-confirmed set data (not the Workout Logger's raw unedited parse).
-
-**Task 1.4: Deterministic Eval Tests (No Live Model)**
-- Create `backend/tests/test_eval_cards.py` with the 3 canonical cases using a **mocked Workout Logger response** (no live Anthropic call, so tests are deterministic and never flake):
-  - **Case 1 (Golden Normal)**: Mock returns 3 sets @ 135 lbs, 10 reps, `pain_flag: false`. Verify schema validation passes, log is persisted correctly.
-  - **Case 2 (Golden Edge Case)**: Mock returns squats with full reps and bench Set 3 at 8 reps with `pain_flag: true`, note: *"shoulder pinching"*. Verify pain flag is scoped to bench only.
-  - **Case 3 (Adversarial)**: Mock returns `status: "incomplete"` with a clarifying question and zero sets. Verify zero `ExtractedSet` objects and no log insertion.
-- Mark a separate test as `@pytest.mark.optional_live` that runs the real Anthropic call against the 3 cases. This test is informational, not a pass/fail gate.
-
-#### 🎨 Yadan's Lane (Mobile Client Logging UI & Persistence)
-
-**Task 1.5: Replace Quick Set Grid with Workout Logger Confirmation Card Flow**
+**Task 1.2: Replace Quick Set Grid with Workout Logger Confirmation Card Flow**
 - The current `/s/[token]/page.tsx` has both a hardcoded set grid AND a chat input box — these are redundant. Replace the grid with the Workout Logger confirmation card flow:
   1. Client types or dictates in the chat input (keep the existing `localStorage`-backed text area).
   2. Client taps "Preview Workout" → calls `POST /api/v1/s/{token}/log/preview`.
@@ -308,17 +298,36 @@ flowchart TD
   7. Client taps "Confirm & Save Workout" → calls `POST /api/v1/s/{token}/log` with confirmed sets and a `client_request_id` (generated UUID stored in `localStorage`).
   8. On save success: clear `localStorage` buffer and show checkmark.
 
-**Task 1.6: Web Speech API Voice Dictation Button**
+**Task 1.3: Web Speech API Voice Dictation Button**
 - Add a microphone button that uses the browser-native Web Speech API (`webkitSpeechRecognition` / `SpeechRecognition`) for instant client-side transcription.
 - Display a visual pulse indicator while listening.
 - Append transcription results to the chat text area. The text area is always the primary input path — voice just fills it.
 - On browsers without speech support: hide the mic button; the text area is the full fallback.
 
-**Task 1.7: Keystroke-Level `localStorage` Buffer**
+**Task 1.4: Keystroke-Level `localStorage` Buffer**
 - Retain and improve existing custom hook:
   - Auto-save raw text input, uncommitted preview response, and `client_request_id` to `localStorage` on every keystroke.
   - On mount, detect if uncommitted draft exists and display "Restore In-Progress Workout" banner.
   - Clear buffer only upon successful database commitment (HTTP 201 from `/log`).
+
+#### 🛠️ Justin's Lane (Preview/Commit API & Idempotent Persistence)
+
+**Task 1.5: Preview Endpoint Wiring**
+- Wire `POST /api/v1/s/{token}/log/preview` to invoke the live `WorkoutLoggerAgent`.
+- Response includes: `status`, `extracted_sets`, optional `clarifying_question`, and observability metadata (`model_name`, `execution_time_ms`).
+- Record every invocation into `agent_traces` table (execution time, tokens, model name, status).
+
+**Task 1.6: Commit Endpoint Wiring**
+- `POST /api/v1/s/{token}/log` accepts `WorkoutLogConfirm` payload (client-edited sets + `client_request_id`).
+- Enforce unique constraint on `client_request_id` — return HTTP 409 Conflict if duplicate.
+- Persist `WorkoutLog` row with the client-confirmed set data (not the Workout Logger's raw unedited parse).
+
+**Task 1.7: Deterministic Eval Tests (No Live Model)**
+- Create `backend/tests/test_eval_cards.py` with the 3 canonical cases using a **mocked Workout Logger response** (no live Anthropic call, so tests are deterministic and never flake):
+  - **Case 1 (Golden Normal)**: Mock returns 3 sets @ 135 lbs, 10 reps, `pain_flag: false`. Verify schema validation passes, log is persisted correctly.
+  - **Case 2 (Golden Edge Case)**: Mock returns squats with full reps and bench Set 3 at 8 reps with `pain_flag: true`, note: *"shoulder pinching"*. Verify pain flag is scoped to bench only.
+  - **Case 3 (Adversarial)**: Mock returns `status: "incomplete"` with a clarifying question and zero sets. Verify zero `ExtractedSet` objects and no log insertion.
+- Mark a separate test as `@pytest.mark.optional_live` that runs the real Anthropic call against the 3 cases. This test is informational, not a pass/fail gate.
 
 #### 🤝 Joint Sync Gate 1 (Checklist before Wave 2)
 - [ ] Run `pytest tests/test_eval_cards.py` — all 3 mocked PRD Eval Cases pass deterministically.
@@ -336,12 +345,38 @@ flowchart TD
 
 ### Wave 2: Deterministic Progression Engine & Progression Planner (Safety Cross-Check & Trainer Review)
 
-**Objective**: Implement the progression loop with per-exercise pain scoping. The deterministic Python engine computes next week's weights based on completed logs; the Progression Planner cross-references proposed loads against client injury history and flags risks; the trainer reviews, edits, and approves the plan on the dashboard. Approving archives the previous plan.
+**Objective**: Implement the progression loop with per-exercise pain scoping. Yadan formulates the progression calculation rules; Justin integrates them into the deterministic Python math engine; the Progression Planner cross-references proposed loads against client injury history and flags risks; the trainer reviews, edits, and approves the plan on the dashboard. Approving archives the previous plan.
 
-#### 🛠️ Justin's Lane (Deterministic Engine & Progression Planner Safety Harness)
+#### 🎨 Yadan's Lane (Progression Calculation Rules & Trainer Review Dashboard)
 
-**Task 2.1: Per-Exercise Progression Math Engine**
-- Fix `SimpleLinearProgression.compute_next_week()` to evaluate pain flags **per-exercise**, not session-wide:
+**Task 2.1: Progression Calculation Rules & Math Specification**
+- Yadan defines the deterministic rules for how next week's weights and reps are calculated:
+  - Rep target bands (e.g. hit all target reps $\to$ $+5\text{ lbs}$ on compounds, maintain load on missed reps).
+  - Isolation lift rules vs compound lift rules (or keeping all at $+5\text{ lbs}$ for MVP).
+  - Explicit conditions under which weight is held vs advanced when pain is flagged on an exercise.
+- Document rules so Justin can integrate them directly into `SimpleLinearProgression`.
+
+**Task 2.2: Plan Review Queue on `/trainer`**
+- Enhance `frontend/src/app/trainer/page.tsx` with a dedicated "Pending Plan Approvals" section.
+- Present pending plans in a scrollable container with search and filter controls.
+- Optimized for PC/desktop browser layouts with responsive fallback for mobile phone viewing.
+- Fetch pending plans via `GET /api/v1/trainer/dashboard` (which now returns trainer-scoped data).
+
+**Task 2.3: Visual Delta Cards & Safety Badges**
+- For each exercise in the draft plan, display:
+  - Exercise name and target reps.
+  - Visual delta pill: e.g. `135 lbs → 140 lbs (+5 lbs)` (Green) or `135 lbs → 135 lbs (Held — shoulder pinching)` (Gray/Amber).
+  - Red/Amber Warning Banner if the Progression Planner flagged a safety conflict. The banner text names the pain and injury history. No exercise substitution recommendations.
+
+**Task 2.4: 1-Click Approval & Inline Editing**
+- "Approve Plan (1-Click)" button calling `POST /api/v1/trainer/plans/{id}/approve`.
+- "Modify Plan" toggle that converts weights/reps into editable inputs.
+- Instant UI update removing the approved card from the queue and displaying a success toast.
+
+#### 🛠️ Justin's Lane (Deterministic Engine Implementation & Progression Planner Safety Harness)
+
+**Task 2.5: Per-Exercise Progression Math Engine Implementation**
+- Implement `SimpleLinearProgression.compute_next_week()` according to Yadan's rule specifications:
   - Remove the `has_pain_flag: bool` parameter from the method signature.
   - For each exercise, check `any(s.pain_flag for s in logged)` where `logged` is filtered to that specific `exercise_id`.
   - If all prescribed sets hit target reps with no pain on that exercise $\to$ advance weight by $+5\text{ lbs}$.
@@ -350,7 +385,7 @@ flowchart TD
   - Drop the `+2.5\text{ lbs}` isolation rule for this build. All exercises progress at $+5\text{ lbs}$. (No compound/isolation field exists on exercises yet; this is a future enhancement.)
 - Write a deterministic test: given Sarah's Case 2 log (squats full reps, bench shoulder pinch), assert: `ex_squat` 185 $\to$ 190, `ex_bench` 135 $\to$ 135 (held, shoulder flag).
 
-**Task 2.2: Weekly Planning Service & Draft Plan Generation**
+**Task 2.6: Weekly Planning Service & Draft Plan Generation**
 - Create `app/services/planning_service.py`:
   - Aggregates logs for client in the current week.
   - Invokes `progression_engine.compute_next_week()` with per-exercise pain data.
@@ -360,7 +395,7 @@ flowchart TD
   - Invokes planning service for the specified client.
   - Returns the newly created draft plan ID.
 
-**Task 2.3: Live Anthropic Claude Wiring in `ProgressionPlannerAgent` (Progression Planner)**
+**Task 2.7: Live Anthropic Claude Wiring in `ProgressionPlannerAgent` (Progression Planner)**
 - In `backend/app/agents/progression_agent.py`, wire `claude-haiku-5-5` (Claude Haiku 5.5).
 - Backend progression calculations are handled deterministically by the Python math engine (`SimpleLinearProgression`), so the Progression Planner operates as a fast, low-cost safety cross-check rather than generating programs from scratch.
 - Pass 3 read-only inputs: (1) Client intake injury notes, (2) Recent workout pain flags, (3) Proposed weights from deterministic engine.
@@ -369,29 +404,11 @@ flowchart TD
 - Attach safety flags (`List[SafetyFlag]`) to `WorkoutPlan.safety_flags_json`.
 - Harness validation: if the model response contains any weight integer values, **strip them and log a prompt violation**. A system prompt sentence alone does not enforce this.
 
-**Task 2.4: Trainer Approval Endpoints**
+**Task 2.8: Trainer Approval Endpoints**
 - In `backend/app/api/v1/endpoints/trainer.py`:
   - `POST /trainer/plans/{id}/approve`: Updates plan status to `"approved"`, stamps `approved_at`, **and archives the previous approved plan for this client in the same transaction** (set status to `"archived"`).
   - `PUT /trainer/plans/{id}`: Allows trainer to override weight, reps, or notes before approving.
   - **Scope all dashboard queries by `trainer_id`** from the authenticated JWT — the draft list must not return other trainers' plans.
-
-#### 🎨 Yadan's Lane (Trainer Dashboard Plan Review & Approval UI)
-
-**Task 2.5: Plan Review Queue on `/trainer`**
-- Enhance `frontend/src/app/trainer/page.tsx` with a dedicated "Pending Plan Approvals" section.
-- Present pending plans in a scrollable container with search and filter controls.
-- Fetch pending plans via `GET /api/v1/trainer/dashboard` (which now returns trainer-scoped data).
-
-**Task 2.6: Visual Delta Cards & Safety Badges**
-- For each exercise in the draft plan, display:
-  - Exercise name and target reps.
-  - Visual delta pill: e.g. `135 lbs → 140 lbs (+5 lbs)` (Green) or `135 lbs → 135 lbs (Held — shoulder pinching)` (Gray/Amber).
-  - Red/Amber Warning Banner if the Progression Planner flagged a safety conflict. The banner text names the pain and injury history. No exercise substitution recommendations.
-
-**Task 2.7: 1-Click Approval & Inline Editing**
-- "Approve Plan (1-Click)" button calling `POST /api/v1/trainer/plans/{id}/approve`.
-- "Modify Plan" toggle that converts weights/reps into editable inputs.
-- Instant UI update removing the approved card from the queue and displaying a success toast.
 
 #### 🤝 Joint Sync Gate 2 (Checklist before Wave 3)
 - [ ] Run `pytest tests/test_progression_engine.py`: Verify `ex_squat` 185 $\to$ 190, `ex_bench` 135 $\to$ 135 (shoulder pinch flag holds bench only).

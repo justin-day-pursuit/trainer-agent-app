@@ -4,22 +4,33 @@ This document illustrates the end-to-end user journeys, system state transitions
 
 ---
 
-## 1. Client Onboarding Flow
+## 1. Dual Client Onboarding & Intake Flow (Option B)
 
-How a trainer creates a client record and delivers an instant-access session link without requiring the client to create an account.
+How client profiles and intake information are populated with autonomy for both trainer and client, backed by trainer human-in-the-loop oversight.
 
 ```mermaid
 flowchart TD
-    A["Trainer logs into /trainer via Supabase Auth"] --> B["Navigate to Client Roster"]
-    B --> C["Click 'Add New Client'"]
-    C --> D["Enter Client Name, Goals, and Intake Injury Notes"]
-    D --> E["FastAPI backend creates ClientProfile row"]
-    E --> F["Backend generates cryptographically secure ClientSession token"]
-    F --> G["Trainer Dashboard displays unique Session URL: /s/:token"]
-    G --> H["Trainer copies link and texts/emails it to Client"]
-    H --> I["Client opens /s/:token on mobile phone"]
-    I --> J["Client bookmarks URL or adds to phone Home Screen"]
-    J --> K["Client views active workout program immediately"]
+    subgraph TrainerPath ["Trainer Intake & Setup"]
+        T1["Trainer logs into /trainer via Supabase Auth"] --> T2["Navigate to Client Roster"]
+        T2 --> T3["Click 'Add New Client' (or use Trainer Assistant)"]
+        T3 --> T4["Enter Client Name, Initial Goals & Injury Notes"]
+        T4 --> T5["FastAPI creates ClientProfile row"]
+        T5 --> T6["Backend generates cryptographic ClientSession token (/s/:token)"]
+        T6 --> T7["Trainer shares session link with Client"]
+    end
+
+    subgraph ClientPath ["Client Mobile Intake & Updates"]
+        C1["Client opens /s/:token on mobile browser"] --> C2["View Active Program & Intake Profile"]
+        C2 --> C3["Client chats with Workout Logger to refine goals/injuries"]
+        C3 --> C4["Workout Logger extracts updated goals or injury alerts"]
+        C4 --> C5["Profile updated with client-reported injury notes"]
+    end
+
+    subgraph TrainerOversight ["Human-in-the-Loop Oversight"]
+        T7 --> C1
+        C5 --> O1["Trainer Dashboard surfaces client profile updates"]
+        O1 --> O2["Trainer manually reviews, edits, or overrides goals/injuries"]
+    end
 ```
 
 ---

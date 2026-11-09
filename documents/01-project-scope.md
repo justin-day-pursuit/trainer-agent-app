@@ -87,9 +87,11 @@ With Trainer Progression App:
 ### In-Scope (MVP & Scaffolding)
 - **Role-Delimited Access**: Supabase email/password authentication for trainers; cryptographic token routing for client workout sessions.
 - **3-Agent Orchestration**: Workout Logger (intake/extraction), Progression Planner (safety analysis), and Trainer Assistant (administrative triage).
+- **Dual Intake Autonomy (Option B)**: Both trainer and client can enter and update fitness goals and injury profiles (via agents or direct UI), with the trainer retaining human-in-the-loop oversight and manual override authority.
+- **Client & Trainer UX Distinction**: Client experience is mobile-browser-compatible for frictionless gym floor workout logging; Trainer dashboard is PC/desktop-browser-optimized for roster management and weekly programming reviews, while offering responsive mobile layout for on-the-go triage.
 - **Client Web UI**: Mobile-first session page supporting natural language chat, quick-tap manual fallback, and real-time offline persistence via `localStorage`.
 - **Trainer Web UI**: Responsive dashboard featuring an adherence triage queue, plan approval cards with visual delta indicators, and client session link generation.
-- **Modular Progression Architecture**: Clean Python interface allowing linear progression for MVP and future rule engine swap-outs.
+- **Modular Progression Architecture**: Clean Python interface allowing linear progression for MVP and future rule engine swap-outs (progression rules formulated by Yadan).
 
 ### Out-of-Scope (Deferred to Later Iterations)
 - **Client Self-Registration**: No passwords, usernames, or account creation for clients.
