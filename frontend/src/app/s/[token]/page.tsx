@@ -33,6 +33,13 @@ const PREVIEW_TIMEOUT_MS = 60000;
 
 interface SessionView {
   client_name: string;
+  link_status: "active" | "pending_review";
+  last_session: {
+    logged_at: string;
+    sets: ExtractedSet[];
+    has_pain_flag: boolean;
+    pain_summary: string | null;
+  } | null;
   active_plan: { id: number; week_label: string; exercises: PrescribedExercise[] };
 }
 
@@ -136,6 +143,14 @@ export default function ClientSessionPage() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
+  const wasPendingRef = useRef(false);
+
+  // Once the trainer approves, the link returns to a fresh workout on the new plan
+  const applySession = useCallback((next: SessionView) => {
+    if (wasPendingRef.current && next.link_status === "active") setPhase("idle");
+    wasPendingRef.current = next.link_status === "pending_review";
+    setSession(next);
+  }, []);
 
   // Update the draft and write it to the phone at the same moment, so a crash can't lose it
   const updateDraft = useCallback(
@@ -165,7 +180,7 @@ export default function ClientSessionPage() {
   // Load the client's plan and look for an unfinished workout from earlier
   useEffect(() => {
     apiFetch<SessionView>(`/s/${token}`)
-      .then(setSession)
+      .then(applySession)
       .catch((error) =>
         setLoadError(
           error instanceof ApiError && error.status === 404
@@ -186,7 +201,7 @@ export default function ClientSessionPage() {
 
     const speechWindow = window as SpeechWindow;
     setSpeechSupported(Boolean(speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition));
-  }, [token, storageKey]);
+  }, [token, storageKey, applySession]);
 
   useEffect(() => {
     if (activeTab !== "progress") return;
@@ -194,6 +209,22 @@ export default function ClientSessionPage() {
       .then((data) => setProgress(data.recent_logs))
       .catch(() => setProgress([]));
   }, [activeTab, token, phase]);
+
+  // Pick up a newly approved plan when the client returns, and keep checking while they wait
+  const isPending = session?.link_status === "pending_review";
+  useEffect(() => {
+    const refreshPlan = () => {
+      if (document.visibilityState === "visible") {
+        apiFetch<SessionView>(`/s/${token}`).then(applySession).catch(() => undefined);
+      }
+    };
+    document.addEventListener("visibilitychange", refreshPlan);
+    const timer = isPending ? setInterval(refreshPlan, 30000) : undefined;
+    return () => {
+      document.removeEventListener("visibilitychange", refreshPlan);
+      if (timer) clearInterval(timer);
+    };
+  }, [token, applySession, isPending]);
 
   useEffect(() => () => recognizerRef.current?.stop(), []);
 
@@ -363,11 +394,13 @@ export default function ClientSessionPage() {
       });
       clearDraft();
       setPhase("saved");
+      apiFetch<SessionView>(`/s/${token}`).then(applySession).catch(() => undefined);
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         // A 409 means an earlier attempt already saved this workout
         clearDraft();
         setPhase("saved");
+        apiFetch<SessionView>(`/s/${token}`).then(applySession).catch(() => undefined);
       } else {
         setErrorMessage(
           error instanceof ApiError
@@ -431,7 +464,44 @@ export default function ClientSessionPage() {
           <div className="p-4 bg-warn-bg border border-warn-line rounded-xl text-warn text-base">{loadError}</div>
         )}
 
-        {activeTab === "workout" && !loadError ? (
+        {activeTab === "workout" && !loadError && isPending ? (
+          /* Waiting on the trainer: this stays in place through reloads until they approve */
+          <section className="space-y-4">
+            <div className="p-4 bg-success-bg border border-success-line rounded-2xl" role="status">
+              <p className="flex items-center gap-2 font-display text-xl font-medium text-success">
+                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                Session Logged! Great work.
+              </p>
+              <p className="text-base text-ink-2 mt-1">
+                Your trainer is reviewing your results to unlock next week's targets.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-hairline rounded-2xl p-4 space-y-3">
+              <h2 className="font-display text-xl font-medium text-ink">What you logged</h2>
+              {Array.from(new Set((session?.last_session?.sets ?? []).map((set) => set.exercise_id))).map((id) => {
+                const rows = (session?.last_session?.sets ?? []).filter((set) => set.exercise_id === id);
+                const effort = rows.find((set) => set.effort)?.effort;
+                const hadPain = rows.some((set) => set.pain_flag);
+                return (
+                  <div key={id} className="p-3 bg-ground rounded-xl border border-hairline">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-base font-semibold text-ink">{exerciseName(id)}</span>
+                      {effort && <span className="text-sm text-ink-2 capitalize">{effort}</span>}
+                    </div>
+                    <p className="text-sm text-ink-2">
+                      {rows.map((set) => set.reps).join(", ")} reps
+                      {rows.some((set) => set.weight_lbs)
+                        ? ` @ ${Array.from(new Set(rows.map((set) => set.weight_lbs))).join(" / ")} lbs`
+                        : ""}
+                    </p>
+                    {hadPain && <p className="text-sm font-semibold text-warn mt-1">Pain noted</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : activeTab === "workout" && !loadError ? (
           <>
             {restorable && (
               <div className="p-4 bg-surface border border-hairline rounded-2xl space-y-3">
@@ -455,9 +525,18 @@ export default function ClientSessionPage() {
             )}
 
             {phase === "saved" && (
-              <div className="p-4 bg-success-bg border border-success-line rounded-xl flex items-center gap-3 text-success text-base">
-                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                <span>Workout saved. Your trainer will review next week's plan.</span>
+              <div className="p-4 bg-success-bg border border-success-line rounded-xl space-y-3" role="status">
+                <div className="flex items-center gap-3 text-success text-base font-semibold">
+                  <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                  <span>Workout logged! Your trainer is reviewing next week.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPhase("idle")}
+                  className="touch-target w-full border border-success-line bg-ground text-ink rounded-full text-sm font-semibold"
+                >
+                  Log another workout
+                </button>
               </div>
             )}
 

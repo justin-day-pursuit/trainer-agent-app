@@ -18,6 +18,7 @@ from app.core.auth import get_current_client_session
 from app.core.database import get_db
 from app.models.client import ClientProfile, ClientSession
 from app.models.workout import WorkoutLog, WorkoutPlan
+from app.services.planning_service import generate_next_week_draft
 from app.schemas.workout import (
     ExtractedSet,
     WorkoutLogCreate,
@@ -63,13 +64,39 @@ async def get_client_session_view(
         select(WorkoutPlan)
         .where(WorkoutPlan.client_id == client_id, WorkoutPlan.status == "approved")
         .order_by(WorkoutPlan.created_at.desc())
+        .limit(1)
     )
     plan_result = await db.execute(plan_stmt)
-    active_plan = plan_result.scalar_one_or_none()
+    active_plan = plan_result.scalars().first()
+
+    # A draft waiting on the trainer means this client's next week isn't ready yet
+    pending_draft = await db.execute(
+        select(WorkoutPlan.id).where(WorkoutPlan.client_id == client_id, WorkoutPlan.status == "draft").limit(1)
+    )
+    is_pending = pending_draft.scalars().first() is not None
+
+    last_session = None
+    if is_pending:
+        last_log_result = await db.execute(
+            select(WorkoutLog)
+            .where(WorkoutLog.client_id == client_id)
+            .order_by(WorkoutLog.logged_at.desc())
+            .limit(1)
+        )
+        last_log = last_log_result.scalars().first()
+        if last_log:
+            last_session = {
+                "logged_at": last_log.logged_at,
+                "sets": last_log.extracted_sets_json or [],
+                "has_pain_flag": last_log.has_pain_flag,
+                "pain_summary": last_log.pain_summary,
+            }
 
     return {
         "client_name": client_name,
         "token": token,
+        "link_status": "pending_review" if is_pending else "active",
+        "last_session": last_session,
         "active_plan": (
             {
                 "id": active_plan.id,
@@ -165,7 +192,7 @@ async def submit_workout_log(
     await db.flush()
     await db.refresh(new_log)
 
-    return WorkoutLogResponse(
+    response = WorkoutLogResponse(
         id=new_log.id,
         client_id=new_log.client_id,
         plan_id=new_log.plan_id,
@@ -176,6 +203,15 @@ async def submit_workout_log(
         pain_summary=new_log.pain_summary,
         logged_at=new_log.logged_at,
     )
+
+    # Draft next week for the trainer. A drafting problem must never lose the client's log.
+    try:
+        async with db.begin_nested():
+            await generate_next_week_draft(db, client_id)
+    except Exception:
+        logger.exception("Could not draft next week for client %s", client_id)
+
+    return response
 
 
 @router.get("/{token}/progress", summary="Client Self-Progress History")
