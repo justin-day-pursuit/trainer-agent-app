@@ -2,6 +2,19 @@
 
 This guide provides step-by-step instructions for deploying the **Trainer Progression App** to production using **Render** (Backend Docker Container), **Vercel** (Frontend Next.js), and **Supabase** (PostgreSQL & Auth).
 
+## Live hosts
+
+These are the deployed addresses. They are public site URLs, not secrets.
+
+| Surface | URL |
+| :--- | :--- |
+| Render API | https://trainer-progression-api.onrender.com |
+| Render health | https://trainer-progression-api.onrender.com/health |
+| API base for the frontend | https://trainer-progression-api.onrender.com/api/v1 |
+| Vercel app | https://trainer-agent-app.vercel.app/ |
+
+`CORS_ORIGINS` on Render uses the Vercel origin with scheme and host only, and no path: `https://trainer-agent-app.vercel.app`. `NEXT_PUBLIC_API_URL` on Vercel is the API base above.
+
 ---
 
 ## 1. Master Environment Variable Catalog
@@ -53,7 +66,7 @@ This guide provides step-by-step instructions for deploying the **Trainer Progre
    - `DATABASE_URL` (Supabase connection string with `postgresql+psycopg://`)
    - `SUPABASE_JWT_SECRET`
    - `ANTHROPIC_API_KEY`
-   - `CORS_ORIGINS` (e.g., `https://your-frontend.vercel.app`)
+   - `CORS_ORIGINS`: `https://trainer-agent-app.vercel.app`
    - `DEBUG`: `false`
 4. **Configure Health Check**:
    - Set **Health Check Path** to `/health`.
@@ -84,8 +97,8 @@ This guide provides step-by-step instructions for deploying the **Trainer Progre
    - `NEXT_PUBLIC_SUPABASE_URL`: `https://your-project.supabase.co`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: `eyJhbGciOi...`
    - `NEXT_PUBLIC_API_URL`: `https://trainer-progression-api.onrender.com/api/v1`
-4. **Deploy**: Click **Deploy**. Vercel will build the Next.js app and assign a production URL (e.g., `https://trainer-progression-app.vercel.app`).
-5. **Update Backend CORS**: Return to Render and update `CORS_ORIGINS` with the newly assigned Vercel URL.
+4. **Deploy**: Click **Deploy**. The production app is https://trainer-agent-app.vercel.app/.
+5. **Update Backend CORS**: Return to Render and set `CORS_ORIGINS` to `https://trainer-agent-app.vercel.app` (scheme and host only, no path).
 
 ---
 
@@ -124,7 +137,7 @@ Verify: Open `http://localhost:3000` on your mobile browser or DevTools mobile e
 
 ## 6. Observability & Production Monitoring
 
-1. **API Health Endpoint**: Automated uptime monitors (Better Uptime, Pingdom, Render Monitor) should ping `GET /health` every 60 seconds.
+1. **API Health Endpoint**: Automated uptime monitors (Better Uptime, Pingdom, Render Monitor) should ping `GET https://trainer-progression-api.onrender.com/health` every 60 seconds.
 2. **Agent Trace Audit Table**: Query `agent_traces` to evaluate model latencies and failure rates:
    ```sql
    SELECT agent_name, status, COUNT(*), AVG(execution_time_ms)

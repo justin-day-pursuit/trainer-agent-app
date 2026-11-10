@@ -76,7 +76,7 @@ A 5-minute presentation, submitted through the Google Form:
 - [ ] **3. Show** the architecture and a diagram of how the agent or workflow moves through.
 - [ ] **4. Practice** to hit 5 minutes, then submit both.
 
-The demo loop has shipped on this line of work. The client logs a workout (Wave 1). The engine drafts next week's weights and reps, the planner may flag a held lift, and the trainer approves the draft (Wave 2). The trainer page shows the on-screen triage feed from `GET /api/v1/trainer/triage`, stored on `triage_alerts` (Wave 3). Wave 4 deploy is not done.
+The demo loop has shipped on this line of work. The client logs a workout (Wave 1). The engine drafts next week's weights and reps, the planner may flag a held lift, and the trainer approves the draft (Wave 2). The trainer page shows the on-screen triage feed from `GET /api/v1/trainer/triage`, stored on `triage_alerts` (Wave 3). The live hosts are https://trainer-progression-api.onrender.com and https://trainer-agent-app.vercel.app/. Joint Sync Gate 4 is still open.
 
 ---
 

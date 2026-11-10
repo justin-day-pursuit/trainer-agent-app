@@ -1,0 +1,34 @@
+# Render builds only the backend directory, keeping frontend files and local secrets
+# outside the image context. Dashboard values remain manual so none enter Git.
+services:
+  - type: web
+    name: trainer-progression-api
+    # Free tier allocation (0.1 CPU, 512 MB). Free web services spin down after
+    # 15 minutes of inactivity and take ~60 seconds to restart upon incoming traffic.
+    # Render's free tier does not support 'preDeployCommand'. To keep database migrations
+    # automated on deploy without a paid instance, migrations run at container startup
+    # in the Dockerfile before the uvicorn web server binds to the port.
+    plan: free
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ENVIRONMENT
+        sync: false
+      - key: DEBUG
+        sync: false
