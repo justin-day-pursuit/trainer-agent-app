@@ -9,8 +9,8 @@
 The Trainer Progression App is built to eliminate hours of weekly administrative overhead for independent personal trainers while keeping them in full control of their clients' training programs.
 
 ### Guiding Engineering Principles
-1. **Deterministic Progression Before LLM**: The AI never invents or calculates exercise weights. A deterministic Python math engine handles progression calculations, while AI agents cross-check safety, extract logs, and draft reviews.
-2. **Trainer Retains Human-in-the-Loop Authority**: No AI-drafted workout plan, progression increase, or client-facing message is delivered without explicit trainer review and one-tap approval.
+1. **Deterministic Progression Before LLM**: The AI never invents or calculates exercise weights. `EffortBasedProgression` drafts the weights and reps. Justin's Progression Planner reviews held lifts and does not change those numbers. It only adds a flag. Other agents extract logs and draft notes for the trainer.
+2. **Trainer Retains Human-in-the-Loop Authority**: The engine drafts the numbers. No planner flag, plan, or client-facing message reaches the client without explicit trainer review and one-tap approval.
 3. **Mobile-First In-Gym Usability**: Client interactions are optimized for one-handed mobile use in sweaty gym environments: large tap targets ($\ge 44\text{px}$), safe-area insets, free-form voice/chat entry, and client-side `localStorage` state persistence to prevent lost data during app refreshes.
 4. **Frictionless Client Identity**: Trainers create accounts using Supabase Auth. Clients do not register accounts; they access their personal workout and logging views via a unique, non-guessable session link (`/s/:token`).
 
@@ -28,6 +28,8 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 - [x] **Modular Progression Engine**: Implemented Protocol-based deterministic progression engine ready for custom progression algorithms.
 - [x] **3-Agent Interfaces**: Defined system prompt templates, tool schemas, and harness structures for the 3 agents: Workout Logger, Progression Planner, and Trainer Assistant.
 - [x] **Mobile Frontend Shells**: Created mobile-first layouts, safe-area CSS utilities, client workout logging screen with local persistence, and trainer review dashboard.
+- [x] **Wave 1 shipped**: The in-gym logging loop and Workout Logger are in place. This is no longer the active wave.
+- [x] **Wave 2 shipped**: `EffortBasedProgression` drafts weights and reps with the reps-first rule in Decision 2. Justin's planner only flags a held, pain-free, same-weight lift and does not change weights. A real planner call writes one `agent_traces` row. A failed trace write does not drop the log or the draft.
 
 ### 🎯 What To Do (Active Sprints & Waves)
 > Refer to the detailed breakdown in [**`documents/09-implementation-plan.md`**](./documents/09-implementation-plan.md).
@@ -36,26 +38,27 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
   - Justin: Alembic migration (port 5432), seed data script against live Supabase, `/log/preview` split, backend test suite, doc contract alignment.
   - Yadan: Local workspace setup on her machine (`npm install`, `frontend/.env.local`, `npm run build`, `npm run lint`), verified Sarah's live session link.
   - **Joint Sync Gate 0**: Passed 2026-11-09. Live Supabase DB verified, Sarah's session loaded by Yadan, canonical vocabulary frozen, 21 backend tests passing.
-- [ ] **Wave 1: In-Gym Logging Loop & Workout Logger (Extraction & Pain Detection)** *(ACTIVE WAVE)*
+- [x] **Wave 1: In-Gym Logging Loop & Workout Logger (Extraction & Pain Detection)** *(Shipped)*
   - Justin: Backend endpoints (`/log/preview`, `/log`), idempotency validation, deterministic eval test suite.
   - Yadan: Workout Logger agent harness (Claude Sonnet 5.5), confirmation card UI, Web Speech API dictation, `localStorage` buffer, mobile-browser-compatible client UX.
   - **Joint Sync Gate 1**: End-to-end mobile logging with inline typo correction and idempotency check.
-- [ ] **Wave 2: Deterministic Progression Engine & Progression Planner (Safety Cross-Check & Trainer Review)**
-  - Yadan: Formulate progression calculation rules/math; trainer plan review queue, visual delta cards (+5 lbs / held), 1-click approve & inline edit UI.
-  - Justin: Implement progression calculation engine to Yadan's specifications, Progression Planner safety harness (Claude Haiku 5.5), weekly planning service, archive-on-approve API.
-  - **Joint Sync Gate 2**: End-to-end progression loop with shoulder pain hold and trainer approval.
-- [ ] **Wave 3: Trainer Assistant (Triage, Adherence & Outreach) & Trainer Admin Suite**
+- [x] **Wave 2: Deterministic Progression Engine & Progression Planner (Safety Cross-Check & Trainer Review)** *(Shipped)*
+  - The engine drafts the numbers. See Decision 2 for the reps-first rule.
+  - Yadan: Trainer plan review queue and 1-click approve.
+  - Justin: `EffortBasedProgression` in the Python engine. The planner reviews held lifts and does not change weights. Drafting appends a [Planner] flag only for a held, pain-free, same-weight lift. A real planner call writes one `agent_traces` row. A failed write does not drop the log or the draft.
+  - **Joint Sync Gate 2**: Engine draft, planner flag, and trainer approval.
+- [ ] **Wave 3: Trainer Assistant (Triage, Adherence & Outreach) & Trainer Admin Suite** *(Not started)*
   - Justin: Trainer Assistant backend service (Claude Sonnet 5.5, urgency in Python), triage feed & dismissal API, client session generation endpoint.
   - Yadan: Trainer triage feed UI, dismiss alerts, client roster table, add client & link generator modal (PC-browser-optimized with mobile responsiveness).
   - **Joint Sync Gate 3**: Inactivity detection, outreach message drafting, session link generation.
-- [ ] **Wave 4: Security Hardening & Production Deployment**
+- [ ] **Wave 4: Security Hardening & Production Deployment** *(Not started)*
   - Justin: Audit trace review, Render backend deployment, full test suite execution.
   - Yadan: Mobile cross-browser QA, Vercel frontend deployment.
   - **Joint Sync Gate 4 / Final Handshake**: Live production demo flow.
 
 ### ⚠️ Issues Needing Resolution (Blockers & Decisions)
 - [ ] **Decision 1: Mobile Speech-to-Text Strategy**: Evaluate browser-native Web Speech API vs server-side Whisper via HTTPX. *Recommendation*: Use Web Speech API for instant client-side dictation, fallback to audio upload if browser support is missing.
-- [ ] **Decision 2: Progression Rule Nuances**: Yadan to define specific rep target bands and progression rules (e.g., compound lifts +5 lbs on $3 \times 10$, isolation lifts +2.5 lbs or rep progression before weight progression) for Justin to implement in the Python engine.
+- [x] **Decision 2: Progression Rule (Decided)**: Reps go up before weight. `EffortBasedProgression` holds the weight and the reps when the client reports pain, misses reps, misses a set, rates the effort challenging, or records no effort. An easy effort under 12 reps adds 2 reps, capped at 12. An easy effort at 12 reps adds 5 lb and resets reps to 8. An easy bodyweight lift at 12 reps holds, and the trainer decides. The deterministic engine drafts those numbers. Justin's planner only flags a held, pain-free, same-weight lift. It does not change weights.
 - [ ] **Decision 3: Trainer Client Import**: Determine whether an import parser for Google Sheets/CSV is needed in Phase 2 or deferred to post-MVP.
 
 ### 🔎 Open Items from Yadan's Repo Review (2026-11-09)
@@ -71,7 +74,7 @@ A 5-minute presentation, submitted through the Google Form:
 - [ ] **3. Show** the architecture and a diagram of how the agent or workflow moves through.
 - [ ] **4. Practice** to hit 5 minutes, then submit both.
 
-The demo needs the core loop working on `develop`: the client logs a workout (Wave 1), the engine drafts next week, and the trainer approves it (Wave 2). Wave 3 and Wave 4 can wait until after the demo.
+The demo loop has shipped on this line of work. The client logs a workout (Wave 1). The engine drafts next week's weights and reps, the planner may flag a held lift, and the trainer approves the draft (Wave 2). Wave 3 triage and Wave 4 deploy are not done.
 
 ---
 
@@ -137,8 +140,8 @@ Follow this checklist whenever setting up a new local workspace:
 
 | Phase | Milestone | Focus Areas | Status |
 | :---: | :--- | :--- | :---: |
-| **Phase 1** | **Scaffolding & Architecture** | Monorepo layout, Next.js, FastAPI, Supabase models, agent specs, docs | 🔄 Completed |
-| **Phase 2** | **Database, Auth & Session Links** | Supabase migrations, trainer JWT auth, client session link resolution | ⬜ Next |
-| **Phase 3** | **Workout Logger & Progression Planner** | Set extraction from chat/voice, deterministic math engine, injury cross-checks, eval harness | ⬜ Planned |
-| **Phase 4** | **Trainer Dashboard & Trainer Assistant** | Triage review queue, one-tap plan approvals, missed check-in alerts, draft messaging | ⬜ Planned |
-| **Phase 5** | **Mobile Gym Polish & Live Testing** | Voice transcription refinement, offline storage resilience, user testing with real trainer | ⬜ Planned |
+| **Phase 1** | **Scaffolding & Architecture** | Monorepo layout, Next.js, FastAPI, Supabase models, agent specs, docs | ✅ Shipped |
+| **Phase 2** | **Database, Auth & Session Links** | Supabase migrations, trainer JWT auth, client session link resolution (Wave 0) | ✅ Shipped |
+| **Phase 3** | **Workout Logger & Progression Planner** | Logging shipped in Wave 1. The engine drafts weights and reps. Justin's planner only flags held lifts and writes an `agent_traces` row (Wave 2). | ✅ Shipped |
+| **Phase 4** | **Trainer Dashboard & Trainer Assistant** | Plan review shipped with Wave 2. The triage feed, adherence alerts, and outreach drafts are Wave 3 and are not on the dashboard yet. | ⬜ Wave 3 |
+| **Phase 5** | **Mobile Gym Polish & Live Testing** | Voice transcription refinement, offline storage resilience, and production deploy. Wave 4 is not done. | ⬜ Wave 4 |
