@@ -43,3 +43,6 @@ target-version = "py310"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "optional_live: live external API integration tests against Anthropic Claude",
+]
