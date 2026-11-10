@@ -522,6 +522,12 @@ Checked items match the shipped engine and planner. Wave 3 has shipped. Wave 4 i
 - Verify production build succeeds and pages load cleanly.
 
 #### 🤝 Joint Sync Gate 4 / Final Handshake (Full Production Demo Flow)
+
+Live hosts:
+
+- Render API: https://trainer-progression-api.onrender.com
+- Vercel app: https://trainer-agent-app.vercel.app/
+
 - [ ] Complete live E2E test on production URLs:
   1. Trainer logs in via Supabase Auth.
   2. Trainer creates client profile for "Elena Rostova" and copies generated session link (real UUID).

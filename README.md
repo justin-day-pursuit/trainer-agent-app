@@ -191,7 +191,13 @@ Frontend will be live at `http://localhost:3000`.
    `CORS_ORIGINS` to that exact origin: scheme and host only, with no path.
 4. Confirm the Render `/health` endpoint and the Vercel site before production use.
 
-No production values belong in this README or either committed environment example.
+Live hosts:
+
+- Render API: https://trainer-progression-api.onrender.com
+- Render health: https://trainer-progression-api.onrender.com/health
+- Vercel app: https://trainer-agent-app.vercel.app/
+
+`NEXT_PUBLIC_API_URL` is `https://trainer-progression-api.onrender.com/api/v1`. Render `CORS_ORIGINS` is `https://trainer-agent-app.vercel.app` (scheme and host only, no path). No secret values belong in this README or either committed environment example.
 
 ---
 
