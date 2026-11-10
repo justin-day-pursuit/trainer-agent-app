@@ -9,7 +9,7 @@ alert stays gone until something new happens with that client.
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -28,4 +28,8 @@ class TriageAlert(Base):
     alert_key: Mapped[str] = mapped_column(String(100), nullable=False)
     draft_message: Mapped[str] = mapped_column(Text, nullable=False)
     dismissed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # The database fills this in when a raw insert omits it. The app also
+    # sets it in Python. Both mean "now", so a missed value cannot land blank.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, server_default=func.now()
+    )

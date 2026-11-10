@@ -281,3 +281,51 @@ def test_new_link_replaces_the_old_one_and_only_for_your_own_clients(api, stand_
 def test_clients_list_only_shows_your_own(api):
     names = [client["full_name"] for client in api.get("/api/v1/clients").json()]
     assert names == ["Sarah"]
+
+
+def test_duplicate_alert_insert_still_returns_one_card(api, stand_in_assistant, monkeypatch):
+    """Two loads can try to save the same alert. The page still shows that one card.
+
+    The first load saves the alert. The second load is forced to miss that
+    saved row, so it tries to insert the same one. The unique rule rejects
+    the copy, and the page returns the alert that won.
+    """
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.sql import Select
+
+    log_workout(api)
+    first = api.get("/api/v1/trainer/triage")
+    assert first.status_code == 200
+    assert len(first.json()["triage_cards"]) == 1
+    winner_id = first.json()["triage_cards"][0]["id"]
+
+    real_execute = AsyncSession.execute
+    hidden = {"done": False}
+
+    async def execute(self, statement, *args, **kwargs):
+        """Hides the first saved-alert read so this load tries a duplicate insert."""
+        # The first read of saved alerts pretends the row is missing, so this
+        # load tries to insert the alert the previous load already saved.
+        reads_saved_alerts = isinstance(statement, Select) and "triage_alerts" in str(statement)
+        if not hidden["done"] and reads_saved_alerts:
+            hidden["done"] = True
+
+            class _Empty:
+                def all(self):
+                    return []
+
+            class _Result:
+                def scalars(self):
+                    return _Empty()
+
+            return _Result()
+        return await real_execute(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(AsyncSession, "execute", execute)
+    response = api.get("/api/v1/trainer/triage")
+    assert response.status_code == 200
+    cards = response.json()["triage_cards"]
+    assert len(cards) == 1
+    assert cards[0]["id"] == winner_id
+    assert hidden["done"] is True
+    assert stand_in_assistant.await_count == 2

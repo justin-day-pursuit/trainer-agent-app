@@ -30,6 +30,7 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
 - [x] **Mobile Frontend Shells**: Created mobile-first layouts, safe-area CSS utilities, client workout logging screen with local persistence, and trainer review dashboard.
 - [x] **Wave 1 shipped**: The in-gym logging loop and Workout Logger are in place. This is no longer the active wave.
 - [x] **Wave 2 shipped**: `EffortBasedProgression` drafts weights and reps with the reps-first rule in Decision 2. Justin's planner only flags a held, pain-free, same-weight lift and does not change weights. A real planner call writes one `agent_traces` row. A failed trace write does not drop the log or the draft.
+- [x] **Wave 3 shipped**: `triage_alerts` stores each adherence alert and when it was dismissed. `GET /api/v1/trainer/triage` returns the live cards and the roster. The trainer page shows that feed. Python ranks urgency (`high`, `medium`, `routine`). Claude Sonnet 5.5 only writes the check-in, and nothing is sent to the client.
 
 ### 🎯 What To Do (Active Sprints & Waves)
 > Refer to the detailed breakdown in [**`documents/09-implementation-plan.md`**](./documents/09-implementation-plan.md).
@@ -47,10 +48,11 @@ The Trainer Progression App is built to eliminate hours of weekly administrative
   - Yadan: Trainer plan review queue and 1-click approve.
   - Justin: `EffortBasedProgression` in the Python engine. The planner reviews held lifts and does not change weights. Drafting appends a [Planner] flag only for a held, pain-free, same-weight lift. A real planner call writes one `agent_traces` row. A failed write does not drop the log or the draft.
   - **Joint Sync Gate 2**: Engine draft, planner flag, and trainer approval.
-- [ ] **Wave 3: Trainer Assistant (Triage, Adherence & Outreach) & Trainer Admin Suite** *(Not started)*
-  - Justin: Trainer Assistant backend service (Claude Sonnet 5.5, urgency in Python), triage feed & dismissal API, client session generation endpoint.
-  - Yadan: Trainer triage feed UI, dismiss alerts, client roster table, add client & link generator modal (PC-browser-optimized with mobile responsiveness).
-  - **Joint Sync Gate 3**: Inactivity detection, outreach message drafting, session link generation.
+- [x] **Wave 3: Trainer Assistant (Triage, Adherence & Outreach) & Trainer Admin Suite** *(Shipped)*
+  - Python ranks urgency. Pain, or no log in more than 7 days, is high. More than 4 days is medium. On track is `routine`. Claude Sonnet 5.5 only writes the check-in. Nothing is sent to the client.
+  - `triage_alerts` keeps the drafted check-in and `dismissed_at`. `GET /api/v1/trainer/triage` returns the live cards and the roster. `POST /api/v1/trainer/triage/{id}/dismiss` stores the dismissal. The dashboard route stays the plan queue.
+  - The trainer page shows the on-screen feed (copy, edit, dismiss) and a scrollable roster (search, goal, urgency, last active). Email and phone are on the existing add-client form. A new session link is a UUIDv4 and turns off that client's older active link. The copied workout link uses the browser origin.
+  - **Joint Sync Gate 3**: Inactivity detection, on-screen feed, and session link generation.
 - [ ] **Wave 4: Security Hardening & Production Deployment** *(Not started)*
   - Justin: Audit trace review, Render backend deployment, full test suite execution.
   - Yadan: Mobile cross-browser QA, Vercel frontend deployment.
@@ -74,7 +76,7 @@ A 5-minute presentation, submitted through the Google Form:
 - [ ] **3. Show** the architecture and a diagram of how the agent or workflow moves through.
 - [ ] **4. Practice** to hit 5 minutes, then submit both.
 
-The demo loop has shipped on this line of work. The client logs a workout (Wave 1). The engine drafts next week's weights and reps, the planner may flag a held lift, and the trainer approves the draft (Wave 2). Wave 3 triage and Wave 4 deploy are not done.
+The demo loop has shipped on this line of work. The client logs a workout (Wave 1). The engine drafts next week's weights and reps, the planner may flag a held lift, and the trainer approves the draft (Wave 2). The trainer page shows the on-screen triage feed from `GET /api/v1/trainer/triage`, stored on `triage_alerts` (Wave 3). Wave 4 deploy is not done.
 
 ---
 
@@ -143,5 +145,5 @@ Follow this checklist whenever setting up a new local workspace:
 | **Phase 1** | **Scaffolding & Architecture** | Monorepo layout, Next.js, FastAPI, Supabase models, agent specs, docs | ✅ Shipped |
 | **Phase 2** | **Database, Auth & Session Links** | Supabase migrations, trainer JWT auth, client session link resolution (Wave 0) | ✅ Shipped |
 | **Phase 3** | **Workout Logger & Progression Planner** | Logging shipped in Wave 1. The engine drafts weights and reps. Justin's planner only flags held lifts and writes an `agent_traces` row (Wave 2). | ✅ Shipped |
-| **Phase 4** | **Trainer Dashboard & Trainer Assistant** | Plan review shipped with Wave 2. The triage feed, adherence alerts, and outreach drafts are Wave 3 and are not on the dashboard yet. | ⬜ Wave 3 |
+| **Phase 4** | **Trainer Dashboard & Trainer Assistant** | Plan review shipped with Wave 2. The on-screen triage feed reads `GET /api/v1/trainer/triage`. Alerts live in `triage_alerts`. | ✅ Shipped |
 | **Phase 5** | **Mobile Gym Polish & Live Testing** | Voice transcription refinement, offline storage resilience, and production deploy. Wave 4 is not done. | ⬜ Wave 4 |
