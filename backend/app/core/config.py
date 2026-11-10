@@ -49,7 +49,7 @@ class Settings(BaseSettings):
 
     # CORS configuration for frontend web app communication
     cors_origins_raw: str = Field(
-        default="http://localhost:3000,http://127.0.0.1:3000",
+        default="http://localhost:3000,http://127.0.0.1:3000,https://trainer-agent-app.vercel.app",
         alias="CORS_ORIGINS",
     )
 
@@ -88,8 +88,15 @@ class Settings(BaseSettings):
         """
         Parses the comma-separated CORS_ORIGINS string into a list of clean URLs
         that FastAPI middleware can use to allow browser cross-origin requests.
+        Normalizes entries by trimming whitespace, stripping quotes, and removing
+        any trailing slashes so browser origin matching succeeds reliably.
         """
-        return [origin.strip() for origin in self.cors_origins_raw.split(",") if origin.strip()]
+        origins: List[str] = []
+        for raw in self.cors_origins_raw.split(","):
+            cleaned = raw.strip().strip("'\"").rstrip("/")
+            if cleaned and cleaned not in origins:
+                origins.append(cleaned)
+        return origins
 
     model_config = SettingsConfigDict(
         env_file=".env",

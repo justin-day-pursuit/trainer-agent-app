@@ -7,7 +7,35 @@
  * - Error formatting with user-friendly error messages.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+/**
+ * Chooses the backend URL once for every API request in this module.
+ *
+ * Local development stays convenient, but a production build stops immediately
+ * when its public API URL is missing so a deployed browser can never call localhost.
+ */
+function resolveApiBaseUrl(): string {
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, "");
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Missing required production configuration: NEXT_PUBLIC_API_URL must point to the backend /api/v1 URL.",
+    );
+  }
+
+  return "http://localhost:8000/api/v1";
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
+
+/** An error response from the API, keeping the HTTP status so callers can react to it. */
+export class ApiError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
 
 interface FetchOptions extends RequestInit {
   token?: string;
@@ -41,7 +69,7 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
       // Fallback to HTTP status text if response is not JSON
       errorDetail = response.statusText || errorDetail;
     }
-    throw new Error(errorDetail);
+    throw new ApiError(errorDetail, response.status);
   }
 
   return response.json() as Promise<T>;

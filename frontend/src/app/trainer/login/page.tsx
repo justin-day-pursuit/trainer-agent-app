@@ -32,18 +32,12 @@ export default function TrainerLoginPage() {
       });
 
       if (error) {
-        // In local development before live Supabase credentials are wired, allow dev bypass
-        if (email.includes("trainer") || email.includes("@")) {
-          router.push("/trainer");
-          return;
-        }
         setErrorMessage(error.message);
       } else {
         router.push("/trainer");
       }
     } catch {
-      // In dev mode, route to trainer dashboard
-      router.push("/trainer");
+      setErrorMessage("We couldn't sign you in. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -54,55 +48,55 @@ export default function TrainerLoginPage() {
       <div className="max-w-sm w-full mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white mb-6"
+          className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink mb-6"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Back to Home</span>
         </Link>
 
         <div className="text-center mb-6">
-          <div className="inline-flex p-3 bg-purple-500/10 rounded-2xl text-purple-400 border border-purple-500/20 mb-3">
+          <div className="inline-flex p-3 bg-surface rounded-2xl text-ink-2 border border-hairline mb-3">
             <ShieldCheck className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Trainer Sign In</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="font-display text-2xl font-medium text-ink">Trainer Sign In</h1>
+          <p className="text-sm text-muted mt-1">
             Access client rosters, review draft progressions, and manage programs.
           </p>
         </div>
 
         {errorMessage && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-300">
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-300">
             {errorMessage}
           </div>
         )}
 
-        <form onSubmit={handleSignIn} className="space-y-4 bg-slate-800/80 p-6 rounded-2xl border border-slate-700">
+        <form onSubmit={handleSignIn} className="space-y-4 bg-surface p-6 rounded-2xl border border-hairline">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
+            <label className="block text-sm font-semibold text-ink-2 mb-1">Email Address</label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Mail className="w-4 h-4 absolute left-3 top-3 text-muted" />
               <input
                 type="email"
                 required
                 placeholder="trainer@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-9 pr-3 py-2 bg-ground border border-hairline rounded-xl text-base text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-ink"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+            <label className="block text-sm font-semibold text-ink-2 mb-1">Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Lock className="w-4 h-4 absolute left-3 top-3 text-muted" />
               <input
                 type="password"
                 required
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-9 pr-3 py-2 bg-ground border border-hairline rounded-xl text-base text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-ink"
               />
             </div>
           </div>
@@ -110,7 +104,7 @@ export default function TrainerLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full touch-target py-2.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-purple-950/40"
+            className="w-full touch-target py-2.5 bg-action hover:bg-action-hover text-on-action font-semibold rounded-full text-base flex items-center justify-center gap-2 transition-colors"
           >
             <span>{loading ? "Signing in..." : "Open Trainer Dashboard"}</span>
             <ArrowRight className="w-4 h-4" />

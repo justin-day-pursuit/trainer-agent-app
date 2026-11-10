@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { Host_Grotesk, Instrument_Sans } from "next/font/google";
 import "./globals.css";
+
+const hostGrotesk = Host_Grotesk({ subsets: ["latin"], variable: "--font-host-grotesk", display: "swap" });
+const instrumentSans = Instrument_Sans({ subsets: ["latin"], variable: "--font-instrument-sans", display: "swap" });
 
 /**
  * Viewport configuration optimized for mobile browsers.
@@ -12,7 +16,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#0f172a",
+  themeColor: "#09090b",
 };
 
 export const metadata: Metadata = {
@@ -26,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full flex flex-col bg-slate-900 text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
+    <html lang="en" className={`h-full ${hostGrotesk.variable} ${instrumentSans.variable}`}>
+      <body className="h-full flex flex-col bg-ground text-ink antialiased selection:bg-ink selection:text-ground">
         {/* Main application container with mobile safe-area paddings */}
         <div className="flex-1 flex flex-col w-full max-w-md mx-auto sm:max-w-xl md:max-w-4xl lg:max-w-6xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
           {children}

@@ -4,22 +4,33 @@ This document illustrates the end-to-end user journeys, system state transitions
 
 ---
 
-## 1. Client Onboarding Flow
+## 1. Dual Client Onboarding & Intake Flow (Option B)
 
-How a trainer creates a client record and delivers an instant-access session link without requiring the client to create an account.
+How client profiles and intake information are populated with autonomy for both trainer and client, backed by trainer human-in-the-loop oversight.
 
 ```mermaid
 flowchart TD
-    A["Trainer logs into /trainer via Supabase Auth"] --> B["Navigate to Client Roster"]
-    B --> C["Click 'Add New Client'"]
-    C --> D["Enter Client Name, Goals, and Intake Injury Notes"]
-    D --> E["FastAPI backend creates ClientProfile row"]
-    E --> F["Backend generates cryptographically secure ClientSession token"]
-    F --> G["Trainer Dashboard displays unique Session URL: /s/:token"]
-    G --> H["Trainer copies link and texts/emails it to Client"]
-    H --> I["Client opens /s/:token on mobile phone"]
-    I --> J["Client bookmarks URL or adds to phone Home Screen"]
-    J --> K["Client views active workout program immediately"]
+    subgraph TrainerPath ["Trainer Intake & Setup"]
+        T1["Trainer logs into /trainer via Supabase Auth"] --> T2["Navigate to Client Roster"]
+        T2 --> T3["Click 'Add New Client' (or use Trainer Assistant)"]
+        T3 --> T4["Enter Client Name, Initial Goals & Injury Notes"]
+        T4 --> T5["FastAPI creates ClientProfile row"]
+        T5 --> T6["Backend generates cryptographic ClientSession token (/s/:token)"]
+        T6 --> T7["Trainer shares session link with Client"]
+    end
+
+    subgraph ClientPath ["Client Mobile Intake & Updates"]
+        C1["Client opens /s/:token on mobile browser"] --> C2["View Active Program & Intake Profile"]
+        C2 --> C3["Client chats with Workout Logger to refine goals/injuries"]
+        C3 --> C4["Workout Logger extracts updated goals or injury alerts"]
+        C4 --> C5["Profile updated with client-reported injury notes"]
+    end
+
+    subgraph TrainerOversight ["Human-in-the-Loop Oversight"]
+        T7 --> C1
+        C5 --> O1["Trainer Dashboard surfaces client profile updates"]
+        O1 --> O2["Trainer manually reviews, edits, or overrides goals/injuries"]
+    end
 ```
 
 ---
@@ -55,25 +66,30 @@ flowchart TD
 
 ## 3. Weekly Progression & Planning Cycle
 
-How the system combines deterministic weight math with AI safety reasoning to generate a staged weekly plan for trainer review.
+How `EffortBasedProgression` drafts next week's weights and reps, and how the planner flags a held lift for the trainer to review. The planner does not change the numbers.
 
 ```mermaid
 flowchart TD
     A["Weekly Planning Trigger (End of Week or Trainer Tap)"] --> B["Fetch all WorkoutLogs for current week"]
-    B --> C["Progression Engine executes deterministic Python rules"]
-    C --> D{"Did client hit all prescribed sets and reps?"}
-    D -- "Yes" --> E["Compute proposed weight: +5 lbs (or +2.5 lbs)"]
-    D -- "No (Missed reps)" --> F["Compute proposed weight: Hold current load"]
-    E --> G["Assemble ProposedPlan data object"]
-    F --> G
-    G --> H["Progression Planner receives ProposedPlan + Intake Injuries + Pain Flags"]
-    H --> I{"Are there conflicts between proposed weights and pain/injury history?"}
-    I -- "Yes (e.g. shoulder pain on bench)" --> J["Generate Safety Alert and recommendation for trainer"]
-    I -- "No conflict" --> K["Mark plan as clean progression"]
-    J --> L["Create WorkoutPlan record in DRAFT status"]
-    K --> L
-    L --> M["Draft plan pushed to Trainer Dashboard Triage Queue"]
-    M --> N["Awaiting Trainer Human-in-the-Loop Review"]
+    B --> C["EffortBasedProgression drafts each exercise on its own"]
+    C --> D{"Pain, missed reps, a missing set, challenging, or no effort?"}
+    D -- "Yes" --> E["Hold the weight and the reps"]
+    D -- "No, the effort was easy" --> F{"Target reps and load"}
+    F -- "Under 12 reps" --> G["Keep the weight and add 2 reps, cap 12"]
+    F -- "12 reps with a weight" --> H["Add 5 lb and reset reps to 8"]
+    F -- "12 bodyweight reps" --> I["Hold. The trainer decides"]
+    E --> J["Assemble the drafted plan"]
+    G --> J
+    H --> J
+    I --> J
+    J --> K["Planner reviews held, pain-free, same-weight lifts"]
+    K --> L{"Is this a held, pain-free, same-weight lift?"}
+    L -- "Yes" --> M["Add a trainer flag. Leave the drafted numbers alone"]
+    L -- "No" --> N["No planner flag. An increase is not blocked"]
+    M --> O["Create WorkoutPlan record in DRAFT status"]
+    N --> O
+    O --> P["Draft plan pushed to Trainer Dashboard Triage Queue"]
+    P --> Q["Awaiting Trainer Human-in-the-Loop Review"]
 ```
 
 ---
@@ -123,10 +139,10 @@ sequenceDiagram
     participant A3 as Trainer Assistant
 
     %% Session Logging
-    Client->>Frontend: Speaks/types "Squat 225 3x5, Bench 135 3x10 felt shoulder pinch"
+    Client->>Frontend: Speaks/types "Squat was easy, hit every set. Bench felt challenging, no pain"
     Frontend->>API: POST /s/:token/log (raw text)
     API->>A1: Parse with untrusted XML tags
-    A1-->>API: Extracted sets + pain_flag: true (shoulder)
+    A1-->>API: Extracted sets. Squat effort easy. Bench effort challenging. No pain
     API-->>Frontend: Render confirmation card
     Client->>Frontend: Taps "Confirm Log"
     Frontend->>API: Commit verified log
@@ -135,17 +151,17 @@ sequenceDiagram
     %% Progression Generation
     Note over API,PE: End of training week triggered
     API->>DB: Query week's workout logs
-    DB-->>API: Completed sets & reps
+    DB-->>API: Completed sets, reps, and effort
     API->>PE: compute_next_week(logged_sets, current_plan)
-    PE-->>API: Proposed weights (+5 lbs squat, +5 lbs bench)
-    API->>A2: Evaluate ProposedPlan + Injuries + Pain Flags
-    A2-->>API: Safety Warning: Block bench +5 lbs due to shoulder pinch
+    PE-->>API: Reps-first draft. Easy squat under 12 gains 2 reps. Challenging bench holds weight and reps
+    API->>A2: Review held, pain-free, same-weight lifts
+    A2-->>API: Flag the held bench for the trainer. Drafted numbers stay unchanged
     API->>DB: INSERT into workout_plans (status: DRAFT)
 
     %% Human in the Loop Review
     Trainer->>API: GET /trainer/dashboard
-    API-->>Trainer: Staged plan with safety alert badge
-    Trainer->>API: Override bench to hold 135 lbs; Tap "Approve"
+    API-->>Trainer: Staged plan with a held-lift flag
+    Trainer->>API: Reviews the held bench flag; Tap "Approve"
     API->>DB: UPDATE workout_plans SET status='APPROVED'
 
     %% Adherence & Outreach

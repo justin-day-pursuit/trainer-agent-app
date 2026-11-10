@@ -2,12 +2,12 @@
 
 from app.services.progression_engine import (
     ProgressionEngine,
-    SimpleLinearProgression,
+    EffortBasedProgression,
     get_progression_engine,
 )
 
 __all__ = [
     "ProgressionEngine",
-    "SimpleLinearProgression",
+    "EffortBasedProgression",
     "get_progression_engine",
 ]

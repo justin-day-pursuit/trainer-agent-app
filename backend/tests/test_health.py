@@ -4,10 +4,15 @@ Health Check and Service Connectivity Tests.
 Confirms that FastAPI starts up cleanly and returns the expected status payloads.
 """
 
+import pytest
 
-def test_root_health_endpoint(client):
+
+@pytest.mark.parametrize("_acceptance_case", [None], ids=["AC-DEPLOY-4"])
+def test_root_health_endpoint_returns_status_ok(client, _acceptance_case):
     """
-    Verifies that GET /health responds with 200 OK and expected structure.
+    Verifies that Render's GET /health probe receives the required status body.
+
+    The named parameter keeps the deployment acceptance ID visible in pytest output.
     """
     response = client.get("/health")
     assert response.status_code == 200

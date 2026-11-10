@@ -49,9 +49,11 @@ app = FastAPI(
 
 # Configure Cross-Origin Resource Sharing (CORS)
 # Allows the Next.js frontend (on Vercel or localhost:3000) to communicate with this backend.
+# allow_origin_regex permits production and preview deployments on Vercel without manual domain updates.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=r"^https://[a-zA-Z0-9_.-]+\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

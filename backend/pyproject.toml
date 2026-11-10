@@ -30,6 +30,7 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.5",
     "ruff>=0.4.0",
+    "aiosqlite>=0.20.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -42,3 +43,6 @@ target-version = "py310"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "optional_live: live external API integration tests against Anthropic Claude",
+]
