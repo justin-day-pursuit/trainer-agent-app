@@ -87,6 +87,7 @@ async def get_client_session_view(
         if last_log:
             last_session = {
                 "logged_at": last_log.logged_at,
+                "message": last_log.raw_input,
                 "sets": last_log.extracted_sets_json or [],
                 "has_pain_flag": last_log.has_pain_flag,
                 "pain_summary": last_log.pain_summary,

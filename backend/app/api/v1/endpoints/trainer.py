@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_trainer
@@ -152,9 +152,14 @@ async def get_trainer_dashboard_summary(
 
     pending_plans = []
     for plan, client in rows:
-        last_logged = await db.execute(
-            select(func.max(WorkoutLog.logged_at)).where(WorkoutLog.client_id == client.id)
+        # The client's latest message, in their own words, so nothing they said is lost
+        latest = await db.execute(
+            select(WorkoutLog)
+            .where(WorkoutLog.client_id == client.id)
+            .order_by(WorkoutLog.logged_at.desc())
+            .limit(1)
         )
+        latest_log = latest.scalars().first()
         efforts = {row.get("effort") for row in (plan.exercises_json or []) if row.get("effort")}
         pending_plans.append(
             {
@@ -164,7 +169,8 @@ async def get_trainer_dashboard_summary(
                 "client_id": client.id,
                 "client_name": client.full_name,
                 "week_label": plan.week_label,
-                "last_workout_at": last_logged.scalar(),
+                "last_workout_at": latest_log.logged_at if latest_log else None,
+                "client_message": latest_log.raw_input if latest_log else None,
                 "overall_effort": "challenging" if "challenging" in efforts else ("easy" if efforts else None),
                 "exercises": plan.exercises_json or [],
                 "safety_flags": plan.safety_flags_json or [],
