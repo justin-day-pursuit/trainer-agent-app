@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.workout import WorkoutLog, WorkoutPlan
 from app.schemas.workout import ExtractedSet, PrescribedExercise
 from app.services.progression_engine import get_progression_engine
+from app.services.planner_review_service import planner_safety_flags
 
 
 def review_summary(exercises: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -82,6 +83,7 @@ async def generate_next_week_draft(db: AsyncSession, client_id: int) -> Optional
         for row in drafted
         if row["pain_reported"]
     ]
+    safety_flags += await planner_safety_flags(db, client_id, drafted)
 
     earlier_drafts = await db.execute(
         select(WorkoutPlan).where(WorkoutPlan.client_id == client_id, WorkoutPlan.status == "draft")
