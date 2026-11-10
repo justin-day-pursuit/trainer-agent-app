@@ -68,7 +68,7 @@ def log_workout(api, request_id="req-1"):
     ]
     response = api.post(
         "/api/v1/s/t/log",
-        json={"client_request_id": request_id, "raw_input": "x", "confirmed_sets": sets, "has_pain_flag": True},
+        json={"client_request_id": request_id, "raw_input": "x", "confirmed_sets": sets, "has_pain_flag": True, "pain_summary": "Shoulder pinched on the last bench set."},
     )
     assert response.status_code == 201
 
@@ -89,6 +89,7 @@ def test_logging_creates_a_draft_with_reasons_and_a_pain_flag(api):
     assert draft["overall_effort"] == "challenging"
     assert draft["safety_flags"][0]["message"].startswith("[Pain Reported]")
     assert draft["week_label"].startswith("Week 2")
+    assert draft["client_message"] == "x"
 
 
 def test_a_new_log_replaces_the_earlier_draft(api):
@@ -174,6 +175,7 @@ def test_logging_locks_the_link_until_the_trainer_approves(api):
     view = api.get("/api/v1/s/t").json()
     assert view["link_status"] == "pending_review"
     assert len(view["last_session"]["sets"]) == 6
+    assert view["last_session"]["message"] == "x"
     draft = only_draft(api)
     assert draft["status"] == "pending_approval"
     api.post(f"/api/v1/trainer/plans/{draft['id']}/approve")
@@ -208,3 +210,76 @@ def test_bulk_approve_cannot_touch_another_trainers_draft(api):
     app.dependency_overrides[get_current_trainer] = lambda: {"sub": "other"}
     result = api.post("/api/v1/trainer/plans/approve-batch", json={"plan_ids": [draft["id"]]}).json()
     assert result["approved_plan_ids"] == []
+
+
+# --- Wave 3: triage, roster, and client links ---
+
+
+@pytest.fixture
+def stand_in_assistant(monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from app.services import triage_service
+
+    draft = AsyncMock(return_value="Hey, checking in!")
+    monkeypatch.setattr(triage_service.assistant, "draft_checkin_message", draft)
+    return draft
+
+
+@pytest.mark.parametrize(
+    "days, pain, expected",
+    [(0, False, "routine"), (4, False, "routine"), (5, False, "medium"), (7, False, "medium"), (8, False, "high"), (0, True, "high")],
+)
+def test_urgency_is_decided_in_code(days, pain, expected):
+    from app.services.triage_service import compute_urgency
+
+    assert compute_urgency(days, pain) == expected
+
+
+def test_active_client_is_on_the_roster_but_not_in_triage(api, stand_in_assistant):
+    body = api.get("/api/v1/trainer/triage").json()
+    assert body["triage_cards"] == []
+    assert body["roster"][0]["urgency"] == "routine"
+    stand_in_assistant.assert_not_awaited()
+
+
+def test_pain_raises_a_high_card_and_the_draft_is_saved(api, stand_in_assistant):
+    log_workout(api)
+    card = api.get("/api/v1/trainer/triage").json()["triage_cards"][0]
+    assert card["urgency"] == "high"
+    assert card["draft_message"] == "Hey, checking in!"
+    assert stand_in_assistant.await_args.kwargs["pain_note"] == "Shoulder pinched on the last bench set."
+    api.get("/api/v1/trainer/triage")
+    assert stand_in_assistant.await_count == 1
+
+
+def test_dismissed_card_stays_gone_until_something_new_happens(api, stand_in_assistant):
+    log_workout(api, "req-1")
+    card = api.get("/api/v1/trainer/triage").json()["triage_cards"][0]
+    assert api.post(f"/api/v1/trainer/triage/{card['id']}/dismiss").status_code == 200
+    assert api.get("/api/v1/trainer/triage").json()["triage_cards"] == []
+    log_workout(api, "req-2")
+    assert len(api.get("/api/v1/trainer/triage").json()["triage_cards"]) == 1
+
+
+def test_trainer_cannot_see_or_dismiss_another_trainers_alert(api, stand_in_assistant):
+    log_workout(api)
+    card = api.get("/api/v1/trainer/triage").json()["triage_cards"][0]
+    app.dependency_overrides[get_current_trainer] = lambda: {"sub": "other"}
+    body = api.get("/api/v1/trainer/triage").json()
+    assert body["triage_cards"] == []
+    assert [row["full_name"] for row in body["roster"]] == ["Other Client"]
+    assert api.post(f"/api/v1/trainer/triage/{card['id']}/dismiss").status_code == 404
+
+
+def test_new_link_replaces_the_old_one_and_only_for_your_own_clients(api, stand_in_assistant):
+    first = api.post("/api/v1/clients/1/sessions").json()["session_token"]
+    second = api.post("/api/v1/clients/1/sessions").json()["session_token"]
+    assert first != second
+    assert api.get("/api/v1/trainer/triage").json()["roster"][0]["session_token"] == second
+    assert api.post("/api/v1/clients/2/sessions").status_code == 404
+
+
+def test_clients_list_only_shows_your_own(api):
+    names = [client["full_name"] for client in api.get("/api/v1/clients").json()]
+    assert names == ["Sarah"]

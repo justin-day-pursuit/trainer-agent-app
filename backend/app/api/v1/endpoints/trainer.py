@@ -12,8 +12,8 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_trainer
@@ -21,10 +21,11 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.models.client import ClientProfile, ClientSession
 from app.models.trainer import Trainer
+from app.models.triage import TriageAlert
 from app.models.workout import WorkoutLog, WorkoutPlan
-from app.schemas.agent import TriageCard
 from app.schemas.workout import WorkoutPlanResponse
 from app.services.planning_service import generate_next_week_draft, review_summary
+from app.services.triage_service import build_triage
 
 router = APIRouter(prefix="/trainer", tags=["Trainer Dashboard (Protected)"])
 
@@ -57,6 +58,8 @@ class StartingExercise(BaseModel):
 class NewClientRequest(BaseModel):
     """Everything needed to get a client started in one step."""
     full_name: str = Field(..., min_length=1, max_length=255)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(None, max_length=50)
     primary_goal: Optional[str] = Field(None, max_length=255)
     injuries: List[str] = Field(default_factory=list)
     exercises: List[StartingExercise] = Field(..., min_length=1, max_length=20)
@@ -149,9 +152,14 @@ async def get_trainer_dashboard_summary(
 
     pending_plans = []
     for plan, client in rows:
-        last_logged = await db.execute(
-            select(func.max(WorkoutLog.logged_at)).where(WorkoutLog.client_id == client.id)
+        # The client's latest message, in their own words, so nothing they said is lost
+        latest = await db.execute(
+            select(WorkoutLog)
+            .where(WorkoutLog.client_id == client.id)
+            .order_by(WorkoutLog.logged_at.desc())
+            .limit(1)
         )
+        latest_log = latest.scalars().first()
         efforts = {row.get("effort") for row in (plan.exercises_json or []) if row.get("effort")}
         pending_plans.append(
             {
@@ -161,47 +169,53 @@ async def get_trainer_dashboard_summary(
                 "client_id": client.id,
                 "client_name": client.full_name,
                 "week_label": plan.week_label,
-                "last_workout_at": last_logged.scalar(),
+                "last_workout_at": latest_log.logged_at if latest_log else None,
+                "client_message": latest_log.raw_input if latest_log else None,
                 "overall_effort": "challenging" if "challenging" in efforts else ("easy" if efforts else None),
                 "exercises": plan.exercises_json or [],
                 "safety_flags": plan.safety_flags_json or [],
             }
         )
 
-    # Pre-built triage cards from Trainer Assistant logic
-    triage_cards: List[TriageCard] = [
-        TriageCard(
-            client_id=1,
-            client_name="Sarah Miller",
-            urgency="high",
-            reason="Shoulder pinching reported on Bench Press set 3. Progression held for safety.",
-            recommended_action="Review shoulder notes and approve or modify Bench Press load.",
-            draft_message="Hey Sarah, noticed your shoulder felt tight on Bench Press. How is it feeling today?",
-        ),
-        TriageCard(
-            client_id=2,
-            client_name="Marcus Vance",
-            urgency="medium",
-            reason="All squat reps hit smoothly (+5 lbs proposed: 190 lbs). Draft plan ready.",
-            recommended_action="Approve Week 2 progression.",
-            draft_message=None,
-        ),
-        TriageCard(
-            client_id=3,
-            client_name="Elena Rostova",
-            urgency="medium",
-            reason="No workout logged in the last 5 days.",
-            recommended_action="Send friendly check-in reminder.",
-            draft_message="Hi Elena, hope your week is off to a great start! Ready for our next session?",
-        ),
-    ]
-
     return {
         "pending_drafts_count": len(pending_plans),
         "pending_plans": pending_plans,
-        "total_active_clients": 3,
-        "triage_queue": [card.model_dump() for card in triage_cards],
     }
+
+
+@router.get("/triage")
+async def get_triage_and_roster(
+    db: AsyncSession = Depends(get_db),
+    current_trainer: dict = Depends(get_current_trainer),
+):
+    """
+    Returns clients needing attention and the full roster. This is separate from the
+    dashboard so a slow check-in draft never holds up the plan review queue.
+    """
+    trainer_id = await get_trainer_id(db, current_trainer)
+    cards, roster = await build_triage(db, trainer_id)
+    return {"triage_cards": cards, "roster": roster, "total_active_clients": len(roster)}
+
+
+@router.post("/triage/{card_id}/dismiss")
+async def dismiss_triage_card(
+    card_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_trainer: dict = Depends(get_current_trainer),
+):
+    """Hides an alert for good. Only something new about the client can raise another."""
+    trainer_id = await get_trainer_id(db, current_trainer)
+    result = await db.execute(
+        select(TriageAlert)
+        .join(ClientProfile, TriageAlert.client_id == ClientProfile.id)
+        .where(TriageAlert.id == card_id, ClientProfile.trainer_id == trainer_id)
+    )
+    alert = result.scalars().first()
+    if alert is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found.")
+    alert.dismissed_at = alert.dismissed_at or datetime.utcnow()
+    await db.flush()
+    return {"id": alert.id, "dismissed": True}
 
 
 @router.post("/plans/{plan_id}/approve", response_model=WorkoutPlanResponse)
@@ -302,6 +316,8 @@ async def add_client(
     client = ClientProfile(
         trainer_id=trainer_id,
         full_name=payload.full_name.strip(),
+        email=payload.email,
+        phone=payload.phone,
         primary_goal=payload.primary_goal,
         injuries_json=[injury.strip() for injury in payload.injuries if injury.strip()],
     )

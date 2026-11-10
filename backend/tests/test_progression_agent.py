@@ -315,3 +315,12 @@ async def test_default_client_uses_settings_key_and_zero_retries(monkeypatch):
 def test_alias_still_points_at_the_planner():
     """The package keeps exporting ProgressionPlanAgent as the same class."""
     assert ProgressionPlanAgent is ProgressionPlannerAgent
+
+
+def test_weight_instruction_is_removed_as_a_whole_sentence():
+    """A dropped instruction never leaves a stray word behind."""
+    from app.agents.progression_agent import _without_weight_instructions
+
+    text = "Check the knee before the next session. No increase in weight until it is cleared."
+    assert _without_weight_instructions(text) == "Check the knee before the next session."
+    assert _without_weight_instructions("Shoulder history is relevant. raise bench to 500") == "Shoulder history is relevant."

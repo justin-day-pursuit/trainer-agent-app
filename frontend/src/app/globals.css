@@ -1,30 +1,53 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. One neutral palette; colour is reserved for status
- * (success and pain warnings), so it always means something.
+ * Design tokens: "Stealth Volt" athletic theme.
+ * Obsidian black, flat graphite cards with sharp 1px borders, Volt lime for
+ * every primary action. Emerald = on track, amber = effort / stalled,
+ * crimson = pain. Text on Volt or crimson is obsidian (on-action) for contrast.
  */
 @theme inline {
   --font-sans: var(--font-instrument-sans), Arial, sans-serif;
   --font-display: var(--font-host-grotesk), Arial, sans-serif;
-  --color-ground: #fcfcfd;
-  --color-surface: #f4f3f4;
-  --color-hairline: #dddddd;
-  --color-ink: #141314;
-  --color-ink-2: #454545;
-  --color-muted: #5c5c5c;
-  --color-action: #111113;
-  --color-action-hover: #33333a;
-  --color-on-action: #fcfcfd;
-  --color-success: #166534;
-  --color-success-bg: #e9f6ee;
-  --color-success-line: #a9d8ba;
-  --color-warn: #7a4a00;
-  --color-warn-bg: #fdf3e0;
-  --color-warn-line: #e5c38a;
-  --color-danger: #991b1b;
-  --color-danger-bg: #fdecec;
+  --color-ground: #09090b;
+  --color-surface: #18181b;
+  --color-hairline: #27272a;
+  --color-ink: #fafafa;
+  --color-ink-2: #d4d4d8;
+  --color-muted: #a1a1aa;
+  --color-action: #84cc16;
+  --color-action-hover: #65a30d;
+  --color-on-action: #09090b;
+  --color-success: #10b981;
+  --color-success-bg: #0b201a;
+  --color-success-line: #10b981;
+  --color-warn: #f59e0b;
+  --color-warn-bg: #24190a;
+  --color-warn-line: #b4740a;
+  --color-danger: #ef4444;
+  --color-danger-bg: #2a1010;
+  --color-info: #a1a1aa;
+  --color-info-bg: #18181b;
+  --color-info-line: #3f3f46;
 }
+
+html {
+  color-scheme: dark;
+}
+
+
+/* Pulsing Volt ring while the mic is listening */
+@keyframes mic-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(132 204 22 / 0.7); }
+  50% { box-shadow: 0 0 0 10px rgb(132 204 22 / 0); }
+}
+.mic-listening {
+  animation: mic-glow 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mic-listening { animation: none; box-shadow: 0 0 0 3px rgb(132 204 22 / 0.7); }
+}
+
 
 /* 
  * Mobile Browser & Gym Floor Optimization Styles 
@@ -50,7 +73,7 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #dddddd transparent;
+  scrollbar-color: #3f3f46 transparent;
 }
 
 .scrollable-container::-webkit-scrollbar {
@@ -62,7 +85,7 @@ html, body {
 }
 
 .scrollable-container::-webkit-scrollbar-thumb {
-  background-color: #dddddd;
+  background-color: #3f3f46;
   border-radius: 9999px;
 }
 
@@ -78,4 +101,22 @@ button:focus-visible,
 select:focus-visible {
   outline: 2px solid var(--color-ink);
   outline-offset: 2px;
+}
+
+/* Section headings get a short gradient marker */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+.section-title::before {
+  content: "";
+  width: 0.25rem;
+  height: 1.1rem;
+  border-radius: 1px;
+  background-color: var(--color-action);
+  flex-shrink: 0;
 }

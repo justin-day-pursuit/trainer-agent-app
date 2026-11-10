@@ -211,9 +211,12 @@ def _without_weight_instructions(text: str) -> str:
     raw = text or ""
     if not _contains_weight_instruction(raw):
         return raw.strip()
-    cleaned = _WEIGHT_INSTRUCTION.sub("", raw)
-    cleaned = _WEIGHT_FIELD.sub("", cleaned)
-    cleaned = re.sub(r"\s+", " ", cleaned).strip(" \t.;,")
+    # Drop each whole sentence that gives a weight or rep instruction, so no
+    # leftover fragment like "No" is left behind ("No weight change this week.").
+    sentences = re.split(r"(?<=[.!?])\s+|\n+", raw)
+    kept = [part for part in sentences if not _WEIGHT_INSTRUCTION.search(part)]
+    cleaned = _WEIGHT_FIELD.sub("", " ".join(kept))
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" \t;,")
     return cleaned
 
 

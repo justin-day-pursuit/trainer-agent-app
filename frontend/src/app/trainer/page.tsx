@@ -14,7 +14,9 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Copy, Loader2, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import type { Effort, SafetyFlag } from "@/types";
+import ClientRoster from "@/components/ClientRoster";
+import TriageFeed from "@/components/TriageFeed";
+import type { Effort, RosterClient, SafetyFlag, TriageCard } from "@/types";
 
 interface DraftExercise {
   exercise_id: string;
@@ -41,6 +43,7 @@ interface PendingPlan {
   client_name: string;
   week_label: string;
   last_workout_at: string | null;
+  client_message: string | null;
   overall_effort: Effort | null;
   exercises: DraftExercise[];
   safety_flags: SafetyFlag[];
@@ -84,8 +87,13 @@ export default function TrainerDashboardPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
 
+  const [triageCards, setTriageCards] = useState<TriageCard[]>([]);
+  const [roster, setRoster] = useState<RosterClient[]>([]);
+
   const [addingClient, setAddingClient] = useState(false);
   const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
   const [clientGoal, setClientGoal] = useState("");
   const [clientInjuries, setClientInjuries] = useState("");
   const [startingRows, setStartingRows] = useState<StartingRow[]>([blankRow(0)]);
@@ -119,6 +127,39 @@ export default function TrainerDashboardPage() {
         if (!handleAuthError(error)) setLoadError("We couldn't load your plans. Refresh to try again.");
       });
   }, [authToken, handleAuthError]);
+
+  // Loaded separately so a slow check-in draft never holds up the plan review queue
+  const loadTriage = useCallback(async () => {
+    try {
+      const token = await authToken();
+      const data = await apiFetch<{ triage_cards: TriageCard[]; roster: RosterClient[] }>("/trainer/triage", { token });
+      setTriageCards(data.triage_cards);
+      setRoster(data.roster);
+    } catch (error) {
+      handleAuthError(error);
+    }
+  }, [authToken, handleAuthError]);
+
+  useEffect(() => {
+    loadTriage();
+  }, [loadTriage]);
+
+  const dismissCard = async (cardId: number) => {
+    const token = await authToken();
+    await apiFetch(`/trainer/triage/${cardId}/dismiss`, { method: "POST", token });
+    setTriageCards((cards) => cards.filter((card) => card.id !== cardId));
+  };
+
+  const getClientLink = async (client: RosterClient) => {
+    let sessionToken = client.session_token;
+    if (!sessionToken) {
+      const token = await authToken();
+      const created = await apiFetch<{ session_token: string }>(`/clients/${client.client_id}/sessions`, { method: "POST", token });
+      sessionToken = created.session_token;
+      loadTriage();
+    }
+    return `${window.location.origin}/s/${sessionToken}`;
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -180,6 +221,8 @@ export default function TrainerDashboardPage() {
 
   const resetClientForm = () => {
     setClientName("");
+    setClientEmail("");
+    setClientPhone("");
     setClientGoal("");
     setClientInjuries("");
     setStartingRows([blankRow(0)]);
@@ -214,6 +257,8 @@ export default function TrainerDashboardPage() {
         token,
         body: JSON.stringify({
           full_name: clientName,
+          email: clientEmail.trim() || null,
+          phone: clientPhone.trim() || null,
           primary_goal: clientGoal.trim() || null,
           injuries: clientInjuries.split(","),
           exercises: startingRows.map((row) => ({
@@ -228,6 +273,7 @@ export default function TrainerDashboardPage() {
       setCopied(false);
       setAddingClient(false);
       resetClientForm();
+      loadTriage();
     } catch (error) {
       if (!handleAuthError(error)) {
         setAddError(error instanceof ApiError ? error.message : "We couldn't add that client. Try again.");
@@ -272,9 +318,9 @@ export default function TrainerDashboardPage() {
     }
   };
 
-  const visiblePlans = (plans ?? []).filter((plan) =>
-    plan.client_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const matchesSearch = (name: string) => name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+  const visiblePlans = (plans ?? []).filter((plan) => matchesSearch(plan.client_name));
+  const visibleTriage = triageCards.filter((card) => matchesSearch(card.client_name));
 
   const groups = [
     {
@@ -295,17 +341,17 @@ export default function TrainerDashboardPage() {
     "w-full h-11 px-3 rounded-lg bg-ground border border-hairline text-sm font-normal text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-ink";
 
   const editField =
-    "w-16 h-10 text-center rounded-lg bg-ground border border-hairline text-sm font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-ink";
+    "w-16 h-11 text-center rounded-lg bg-ground border border-hairline text-sm font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-ink";
 
   return (
     <div className="flex-1 flex flex-col h-full bg-ground text-ink">
-      <header className="px-4 py-3 bg-surface border-b border-hairline sticky top-0 z-20 flex items-center justify-between gap-3">
+      <header className="relative px-4 py-3 bg-ground border-b border-hairline sticky top-0 z-20 flex items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-2">
-          <div className="p-1.5 bg-ground rounded-lg text-ink-2">
+          <div className="bg-action p-1.5 rounded-lg text-on-action">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-display text-base font-medium text-ink">Trainer Dashboard</h1>
+            <h1 className="font-display text-base font-extrabold uppercase tracking-tight text-ink">Trainer Dashboard</h1>
             <p className="text-sm text-muted">Weekly plan review</p>
           </div>
         </Link>
@@ -345,6 +391,14 @@ export default function TrainerDashboardPage() {
             <label className="block text-sm font-semibold text-ink">
               Name
               <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`${textField} mt-1`} />
+            </label>
+            <label className="block text-sm font-semibold text-ink">
+              Email
+              <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} className={`${textField} mt-1`} />
+            </label>
+            <label className="block text-sm font-semibold text-ink">
+              Phone
+              <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} className={`${textField} mt-1`} />
             </label>
             <label className="block text-sm font-semibold text-ink">
               Goals
@@ -423,24 +477,30 @@ export default function TrainerDashboardPage() {
 
       <div className="px-4 pt-4 pb-2">
         <div className="relative max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-muted" />
+          <Search className="w-4 h-4 absolute left-3 top-3.5 text-muted" />
           <input
             type="text"
             placeholder="Search clients..."
             aria-label="Search clients"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-surface border border-hairline rounded-xl text-sm text-ink placeholder-muted focus:outline-none focus:ring-1 focus:ring-ink"
+            className="w-full h-11 pl-9 pr-3 bg-surface border border-hairline rounded-xl text-sm text-ink placeholder-muted focus:outline-none focus:ring-1 focus:ring-ink"
           />
         </div>
       </div>
 
       <div className="flex-1 scrollable-container p-4 space-y-4">
+        <TriageFeed cards={visibleTriage} onDismiss={dismissCard} />
+
+        <div>
+          <h2 className="section-title font-display text-lg text-ink">Ready for review ({visiblePlans.length})</h2>
+          <p className="text-sm text-ink-2">Next week&apos;s targets, drafted after each logged workout.</p>
+        </div>
         {loadError && <p className="p-4 bg-warn-bg border border-warn-line rounded-xl text-warn text-base">{loadError}</p>}
         {!loadError && plans === null && <p className="text-sm text-muted">Loading plans...</p>}
         {plans !== null && visiblePlans.length === 0 && !loadError && (
-          <p className="text-base text-ink-2">
-            {plans.length === 0 ? "All caught up. New drafts appear here after clients log workouts." : "No clients match that search."}
+          <p className="p-4 rounded-2xl border border-dashed border-hairline text-sm text-ink-2">
+            {plans.length === 0 ? "Nothing waiting. New drafts appear here after clients log workouts." : "No plans match that search."}
           </p>
         )}
 
@@ -449,7 +509,7 @@ export default function TrainerDashboardPage() {
             <section key={group.key} className="space-y-3" aria-label={group.title}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className={`font-display text-lg font-medium ${group.key === "auto_approve" ? "text-success" : "text-danger"}`}>
+                  <h2 className={`font-display text-base font-extrabold uppercase tracking-tight ${group.key === "auto_approve" ? "text-success" : "text-danger"}`}>
                     {group.title} ({group.plans.length})
                   </h2>
                   <p className="text-sm text-ink-2">{group.subtitle}</p>
@@ -470,15 +530,20 @@ export default function TrainerDashboardPage() {
           const editing = editingPlanId === plan.id;
           const busy = busyPlanId === plan.id;
           return (
-            <article key={plan.id} className="p-4 rounded-2xl border bg-surface border-hairline space-y-3">
+            <article
+              key={plan.id}
+              className={`p-4 rounded-2xl border border-l-4 bg-surface border-hairline space-y-3 ${
+                plan.review_group === "auto_approve" ? "border-l-success" : "border-l-danger"
+              }`}
+            >
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display text-lg font-medium text-ink">{plan.client_name}</h3>
+                  <h3 className="font-display text-lg font-bold tracking-tight text-ink">{plan.client_name}</h3>
                   {plan.badges.map((badge) => (
                     <span
                       key={badge}
                       className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        badge === "Pain Reported" ? "bg-danger text-on-action" : "bg-danger-bg text-danger"
+                        badge === "Pain Reported" ? "bg-danger text-on-action" : "bg-warn-bg text-warn border border-warn-line"
                       }`}
                     >
                       {badge}
@@ -496,8 +561,15 @@ export default function TrainerDashboardPage() {
                 </p>
               </div>
 
+              {plan.client_message && (
+                <figure className="rounded-xl border border-hairline border-l-4 border-l-action bg-ground px-4 py-3">
+                  <figcaption className="text-xs font-bold uppercase tracking-tight text-muted">In their words</figcaption>
+                  <blockquote className="mt-1 text-base text-ink">&ldquo;{plan.client_message}&rdquo;</blockquote>
+                </figure>
+              )}
+
               {plan.safety_flags.map((flag, index) => (
-                <div key={index} role="alert" className="p-3 bg-warn-bg border border-warn-line rounded-xl flex items-start gap-2 text-sm text-warn">
+                <div key={index} role="alert" className="p-3 bg-danger-bg border border-danger rounded-xl flex items-start gap-2 text-sm text-danger">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold">{flag.message}</p>
@@ -518,7 +590,7 @@ export default function TrainerDashboardPage() {
                   <li
                     key={exercise.exercise_id}
                     className={`p-3 rounded-xl border grid grid-cols-1 md:grid-cols-[1.1fr_1fr_1fr_1.4fr] gap-x-3 gap-y-1 md:items-center ${
-                      exercise.pain_reported ? "bg-warn-bg border-warn-line" : "bg-ground border-hairline"
+                      exercise.pain_reported ? "bg-danger-bg border-danger" : "bg-ground border-hairline"
                     }`}
                   >
                     <span className="text-base font-semibold text-ink">{exercise.name}</span>
@@ -551,7 +623,7 @@ export default function TrainerDashboardPage() {
                         />
                       </span>
                     ) : (
-                      <span className="text-sm font-semibold text-ink">
+                      <span className="text-sm font-bold text-action">
                         <span className="md:hidden">Next week: </span>
                         {exercise.sets} × {exercise.target_reps} @ {weightLabel(exercise.target_weight_lbs)}
                       </span>
@@ -588,6 +660,8 @@ export default function TrainerDashboardPage() {
             </section>
           )
         )}
+
+        {roster.length > 0 && <ClientRoster clients={roster} search={searchQuery} getClientLink={getClientLink} />}
       </div>
     </div>
   );
