@@ -425,7 +425,8 @@ export default function ClientSessionPage() {
   return (
     <div className="flex-1 flex flex-col h-full w-full max-w-md mx-auto bg-ground text-ink">
       {/* Mobile Top App Bar */}
-      <header className="px-4 py-3 bg-surface border-b border-hairline sticky top-0 z-20 flex items-center justify-between">
+      <header className="relative px-4 py-3 bg-ground border-b border-hairline sticky top-0 z-20 flex items-center justify-between">
+        <span aria-hidden="true" className="brand-gradient absolute inset-x-0 top-0 h-1" />
         <div className="flex items-center gap-2 min-w-0">
           <Link href="/" className="p-1 text-muted hover:text-ink" aria-label="Back to home">
             <ChevronLeft className="w-5 h-5" />

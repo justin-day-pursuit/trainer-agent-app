@@ -317,9 +317,9 @@ export default function TrainerDashboardPage() {
     }
   };
 
-  const visiblePlans = (plans ?? []).filter((plan) =>
-    plan.client_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const matchesSearch = (name: string) => name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+  const visiblePlans = (plans ?? []).filter((plan) => matchesSearch(plan.client_name));
+  const visibleTriage = triageCards.filter((card) => matchesSearch(card.client_name));
 
   const groups = [
     {
@@ -344,9 +344,10 @@ export default function TrainerDashboardPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-ground text-ink">
-      <header className="px-4 py-3 bg-surface border-b border-hairline sticky top-0 z-20 flex items-center justify-between gap-3">
+      <header className="relative px-4 py-3 bg-ground border-b border-hairline sticky top-0 z-20 flex items-center justify-between gap-3">
+        <span aria-hidden="true" className="brand-gradient absolute inset-x-0 top-0 h-1" />
         <Link href="/" className="flex items-center gap-2">
-          <div className="p-1.5 bg-ground rounded-lg text-ink-2">
+          <div className="brand-gradient p-1.5 rounded-lg text-on-action">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
@@ -489,13 +490,17 @@ export default function TrainerDashboardPage() {
       </div>
 
       <div className="flex-1 scrollable-container p-4 space-y-4">
-        <TriageFeed cards={triageCards} onDismiss={dismissCard} />
+        <TriageFeed cards={visibleTriage} onDismiss={dismissCard} />
 
+        <div>
+          <h2 className="section-title font-display text-lg font-medium text-ink">Plans to review ({visiblePlans.length})</h2>
+          <p className="text-sm text-ink-2">Next week&apos;s targets, drafted after each logged workout.</p>
+        </div>
         {loadError && <p className="p-4 bg-warn-bg border border-warn-line rounded-xl text-warn text-base">{loadError}</p>}
         {!loadError && plans === null && <p className="text-sm text-muted">Loading plans...</p>}
         {plans !== null && visiblePlans.length === 0 && !loadError && (
-          <p className="text-base text-ink-2">
-            {plans.length === 0 ? "No plans waiting for review. New drafts appear here after clients log workouts." : "No clients match that search."}
+          <p className="p-4 rounded-2xl border border-dashed border-hairline text-sm text-ink-2">
+            {plans.length === 0 ? "Nothing waiting. New drafts appear here after clients log workouts." : "No plans match that search."}
           </p>
         )}
 
@@ -644,7 +649,7 @@ export default function TrainerDashboardPage() {
           )
         )}
 
-        {roster.length > 0 && <ClientRoster clients={roster} getClientLink={getClientLink} />}
+        {roster.length > 0 && <ClientRoster clients={roster} search={searchQuery} getClientLink={getClientLink} />}
       </div>
     </div>
   );

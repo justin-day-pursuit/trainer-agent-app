@@ -1,32 +1,40 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. One neutral palette; colour is reserved for status
- * (success and pain warnings), so it always means something.
+ * Design tokens. Electric violet is the main action colour, with a
+ * violet -> pink -> orange gradient as the brand accent. Status colours
+ * (success, warn, danger, info) stay distinct so they always mean something.
  */
 @theme inline {
   --font-sans: var(--font-instrument-sans), Arial, sans-serif;
   --font-display: var(--font-host-grotesk), Arial, sans-serif;
-  --color-ground: #fcfcfd;
-  --color-surface: #f4f3f4;
-  --color-hairline: #dddddd;
-  --color-ink: #141314;
-  --color-ink-2: #454545;
-  --color-muted: #5c5c5c;
-  --color-action: #111113;
-  --color-action-hover: #33333a;
-  --color-on-action: #fcfcfd;
-  --color-success: #166534;
-  --color-success-bg: #e9f6ee;
-  --color-success-line: #a9d8ba;
-  --color-warn: #7a4a00;
-  --color-warn-bg: #fdf3e0;
-  --color-warn-line: #e5c38a;
-  --color-danger: #991b1b;
-  --color-danger-bg: #fdecec;
-  --color-info: #1e4f8a;
-  --color-info-bg: #e8f0fa;
-  --color-info-line: #a9c4e6;
+  --color-ground: #fbfaff;
+  --color-surface: #f4f1ff;
+  --color-hairline: #e2dcf5;
+  --color-ink: #17132b;
+  --color-ink-2: #463f61;
+  --color-muted: #5f5878;
+  --color-action: #5b2ee5;
+  --color-action-hover: #4720c4;
+  --color-on-action: #ffffff;
+  --color-brand-pink: #ff3d7f;
+  --color-brand-orange: #ff8a3d;
+  --color-success: #0b7a45;
+  --color-success-bg: #e3f9ec;
+  --color-success-line: #8fdcb0;
+  --color-warn: #9a4d00;
+  --color-warn-bg: #fff3dc;
+  --color-warn-line: #ffc56b;
+  --color-danger: #d01f45;
+  --color-danger-bg: #ffe8ee;
+  --color-info: #1d62d6;
+  --color-info-bg: #e6f0ff;
+  --color-info-line: #9cc2ff;
+}
+
+/* Brand gradient, used sparingly: header strip, logo tile, section markers */
+.brand-gradient {
+  background-image: linear-gradient(90deg, var(--color-action), var(--color-brand-pink), var(--color-brand-orange));
 }
 
 /* 
@@ -53,7 +61,7 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #dddddd transparent;
+  scrollbar-color: #cfc6f0 transparent;
 }
 
 .scrollable-container::-webkit-scrollbar {
@@ -65,7 +73,7 @@ html, body {
 }
 
 .scrollable-container::-webkit-scrollbar-thumb {
-  background-color: #dddddd;
+  background-color: #cfc6f0;
   border-radius: 9999px;
 }
 
@@ -81,4 +89,19 @@ button:focus-visible,
 select:focus-visible {
   outline: 2px solid var(--color-ink);
   outline-offset: 2px;
+}
+
+/* Section headings get a short gradient marker */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.section-title::before {
+  content: "";
+  width: 0.375rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background-image: linear-gradient(180deg, var(--color-action), var(--color-brand-pink), var(--color-brand-orange));
+  flex-shrink: 0;
 }

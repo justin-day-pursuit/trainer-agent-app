@@ -6,12 +6,14 @@
  */
 
 import React, { useState } from "react";
-import { Check, Copy, Search } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { URGENCY_STYLES } from "@/components/TriageFeed";
 import type { RosterClient, Urgency } from "@/types";
 
 interface ClientRosterProps {
   clients: RosterClient[];
+  /** The dashboard's search text. One search box filters the whole dashboard. */
+  search: string;
   /** Returns the client's private link, creating one if they don't have one yet. */
   getClientLink: (client: RosterClient) => Promise<string>;
 }
@@ -21,8 +23,7 @@ const lastActiveLabel = (client: RosterClient) =>
     ? new Date(client.last_active_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
     : "Never logged";
 
-export default function ClientRoster({ clients, getClientLink }: ClientRosterProps) {
-  const [search, setSearch] = useState("");
+export default function ClientRoster({ clients, search, getClientLink }: ClientRosterProps) {
   const [goalFilter, setGoalFilter] = useState("all");
   const [urgencyFilter, setUrgencyFilter] = useState<"all" | Urgency>("all");
   const [newestFirst, setNewestFirst] = useState(true);
@@ -56,20 +57,9 @@ export default function ClientRoster({ clients, getClientLink }: ClientRosterPro
 
   return (
     <section className="space-y-3" aria-label="Client roster">
-      <h2 className="font-display text-lg font-medium text-ink">Clients ({clients.length})</h2>
+      <h2 className="section-title font-display text-lg font-medium text-ink">Clients ({clients.length})</h2>
 
       <div className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-48">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-muted" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name..."
-            aria-label="Search roster by name"
-            className={`${control} w-full pl-9 placeholder-muted`}
-          />
-        </div>
         <select value={goalFilter} onChange={(e) => setGoalFilter(e.target.value)} aria-label="Filter by goal" className={control}>
           <option value="all">All goals</option>
           {goals.map((goal) => (
@@ -127,7 +117,7 @@ export default function ClientRoster({ clients, getClientLink }: ClientRosterPro
                       type="button"
                       onClick={() => copyLink(client)}
                       aria-label={`Copy link for ${client.full_name}`}
-                      className="touch-target px-3 border border-hairline hover:bg-hairline text-ink-2 rounded-full text-xs font-semibold flex items-center gap-1"
+                      className="touch-target px-3 border border-hairline bg-ground hover:bg-surface text-action rounded-full text-xs font-semibold flex items-center gap-1"
                     >
                       {copiedId === client.client_id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedId === client.client_id ? "Copied" : "Copy"}</span>

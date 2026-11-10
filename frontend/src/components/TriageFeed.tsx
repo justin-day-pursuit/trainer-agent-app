@@ -11,10 +11,10 @@ import React, { useState } from "react";
 import { Check, ChevronDown, Copy } from "lucide-react";
 import type { TriageCard, Urgency } from "@/types";
 
-const URGENCY_STYLES: Record<Urgency, { border: string; badge: string; label: string }> = {
-  high: { border: "border-danger", badge: "bg-danger text-on-action", label: "High" },
-  medium: { border: "border-warn-line", badge: "bg-warn-bg text-warn", label: "Medium" },
-  routine: { border: "border-info-line", badge: "bg-info-bg text-info", label: "Routine" },
+const URGENCY_STYLES: Record<Urgency, { border: string; tint: string; badge: string; label: string }> = {
+  high: { border: "border-danger", tint: "bg-danger-bg", badge: "bg-danger text-on-action", label: "High" },
+  medium: { border: "border-warn-line", tint: "bg-warn-bg", badge: "bg-warn-line text-warn", label: "Medium" },
+  routine: { border: "border-info-line", tint: "bg-info-bg", badge: "bg-info-bg text-info", label: "Routine" },
 };
 
 interface TriageFeedProps {
@@ -54,7 +54,7 @@ export default function TriageFeed({ cards, onDismiss }: TriageFeedProps) {
   return (
     <section className="space-y-3" aria-label="Triage feed">
       <div>
-        <h2 className="font-display text-lg font-medium text-ink">Check in with ({cards.length})</h2>
+        <h2 className="section-title font-display text-lg font-medium text-ink">Check in with ({cards.length})</h2>
         <p className="text-sm text-ink-2">Drafts are for you to review and send yourself.</p>
       </div>
       <div className="grid gap-3 lg:grid-cols-2 items-start">
@@ -62,7 +62,7 @@ export default function TriageFeed({ cards, onDismiss }: TriageFeedProps) {
           const style = URGENCY_STYLES[card.urgency];
           const expanded = expandedId === card.id;
           return (
-            <article key={card.id} className={`p-4 rounded-2xl border-2 bg-surface space-y-3 ${style.border}`}>
+            <article key={card.id} className={`p-4 rounded-2xl border-2 space-y-3 ${style.border} ${style.tint}`}>
               <button
                 type="button"
                 onClick={() => setExpandedId(expanded ? null : card.id)}

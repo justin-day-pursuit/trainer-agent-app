@@ -68,7 +68,7 @@ def log_workout(api, request_id="req-1"):
     ]
     response = api.post(
         "/api/v1/s/t/log",
-        json={"client_request_id": request_id, "raw_input": "x", "confirmed_sets": sets, "has_pain_flag": True},
+        json={"client_request_id": request_id, "raw_input": "x", "confirmed_sets": sets, "has_pain_flag": True, "pain_summary": "Shoulder pinched on the last bench set."},
     )
     assert response.status_code == 201
 
@@ -246,6 +246,7 @@ def test_pain_raises_a_high_card_and_the_draft_is_saved(api, stand_in_assistant)
     card = api.get("/api/v1/trainer/triage").json()["triage_cards"][0]
     assert card["urgency"] == "high"
     assert card["draft_message"] == "Hey, checking in!"
+    assert stand_in_assistant.await_args.kwargs["pain_note"] == "Shoulder pinched on the last bench set."
     api.get("/api/v1/trainer/triage")
     assert stand_in_assistant.await_count == 1
 

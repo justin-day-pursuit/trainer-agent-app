@@ -76,6 +76,7 @@ async def _client_rows(db: AsyncSession, trainer_id: int, now: datetime) -> List
                 "last_active_at": last_log.logged_at if last_log else None,
                 "days_inactive": days_inactive,
                 "pain": pain,
+                "pain_note": last_log.pain_summary if pain else None,
                 "urgency": compute_urgency(days_inactive, pain),
                 "session_token": session_result.scalars().first(),
             }
@@ -114,6 +115,7 @@ async def build_triage(
                 r["days_inactive"],
                 r["pain"],
                 ever_logged=r["last_log_id"] is not None,
+                pain_note=r["pain_note"],
             )
             for r in new_rows
         ]
