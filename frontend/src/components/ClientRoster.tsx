@@ -53,7 +53,7 @@ export default function ClientRoster({ clients, search, getClientLink }: ClientR
   };
 
   const control =
-    "h-10 px-3 bg-ground border border-hairline rounded-xl text-sm text-ink focus:outline-none focus:ring-1 focus:ring-ink";
+    "h-11 px-3 bg-ground border border-hairline rounded-xl text-sm text-ink focus:outline-none focus:ring-1 focus:ring-ink";
 
   return (
     <section className="space-y-3" aria-label="Client roster">

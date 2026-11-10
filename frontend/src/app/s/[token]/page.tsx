@@ -425,10 +425,9 @@ export default function ClientSessionPage() {
   return (
     <div className="flex-1 flex flex-col h-full w-full max-w-md mx-auto bg-ground text-ink">
       {/* Mobile Top App Bar */}
-      <header className="relative px-4 py-3 bg-ground border-b border-hairline sticky top-0 z-20 flex items-center justify-between">
-        <span aria-hidden="true" className="brand-gradient absolute inset-x-0 top-0 h-1" />
+      <header className="relative px-4 py-3 bg-ground border-b border-hairline sticky top-0 z-20 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Link href="/" className="p-1 text-muted hover:text-ink" aria-label="Back to home">
+          <Link href="/" className="touch-target -ml-2 flex items-center justify-center text-muted hover:text-ink" aria-label="Back to home">
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div className="min-w-0">
@@ -440,10 +439,10 @@ export default function ClientSessionPage() {
         </div>
 
         {/* Tab Navigator */}
-        <div className="flex flex-shrink-0 bg-ground p-0.5 rounded-full border border-hairline">
+        <div className="flex w-full sm:w-auto flex-shrink-0 bg-surface p-0.5 rounded-full border border-hairline">
           <button
             onClick={() => setActiveTab("workout")}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-full whitespace-nowrap transition-colors ${
+            className={`touch-target flex-1 sm:flex-none px-4 text-sm font-semibold rounded-full whitespace-nowrap transition-colors ${
               activeTab === "workout" ? "bg-action text-on-action" : "text-muted"
             }`}
           >
@@ -451,7 +450,7 @@ export default function ClientSessionPage() {
           </button>
           <button
             onClick={() => setActiveTab("progress")}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-full whitespace-nowrap transition-colors ${
+            className={`touch-target flex-1 sm:flex-none px-4 text-sm font-semibold rounded-full whitespace-nowrap transition-colors ${
               activeTab === "progress" ? "bg-action text-on-action" : "text-muted"
             }`}
           >
@@ -469,7 +468,7 @@ export default function ClientSessionPage() {
           /* Waiting on the trainer: this stays in place through reloads until they approve */
           <section className="space-y-4">
             <div className="p-4 bg-success-bg border border-success-line rounded-2xl" role="status">
-              <p className="flex items-center gap-2 font-display text-xl font-medium text-success">
+              <p className="flex items-center gap-2 font-display text-xl font-extrabold tracking-tight text-success">
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                 Session Logged! Great work.
               </p>
@@ -479,7 +478,7 @@ export default function ClientSessionPage() {
             </div>
 
             <div className="bg-surface border border-hairline rounded-2xl p-4 space-y-3">
-              <h2 className="font-display text-xl font-medium text-ink">What you logged</h2>
+              <h2 className="section-title font-display text-lg text-ink">What you logged</h2>
               {Array.from(new Set((session?.last_session?.sets ?? []).map((set) => set.exercise_id))).map((id) => {
                 const rows = (session?.last_session?.sets ?? []).filter((set) => set.exercise_id === id);
                 const effort = rows.find((set) => set.effort)?.effort;
@@ -488,7 +487,9 @@ export default function ClientSessionPage() {
                   <div key={id} className="p-3 bg-ground rounded-xl border border-hairline">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-base font-semibold text-ink">{exerciseName(id)}</span>
-                      {effort && <span className="text-sm text-ink-2 capitalize">{effort}</span>}
+                      {effort && (
+                        <span className={`text-sm font-semibold capitalize ${effort === "challenging" ? "text-warn" : "text-success"}`}>{effort}</span>
+                      )}
                     </div>
                     <p className="text-sm text-ink-2">
                       {rows.map((set) => set.reps).join(", ")} reps
@@ -496,7 +497,7 @@ export default function ClientSessionPage() {
                         ? ` @ ${Array.from(new Set(rows.map((set) => set.weight_lbs))).join(" / ")} lbs`
                         : ""}
                     </p>
-                    {hadPain && <p className="text-sm font-semibold text-warn mt-1">Pain noted</p>}
+                    {hadPain && <p className="text-sm font-semibold text-danger mt-1">Pain noted</p>}
                   </div>
                 );
               })}
@@ -543,13 +544,13 @@ export default function ClientSessionPage() {
 
             {/* Today's plan */}
             <section className="bg-surface border border-hairline rounded-2xl p-4">
-              <h2 className="font-display text-xl font-medium text-ink mb-3">Today's plan</h2>
+              <h2 className="section-title font-display text-lg text-ink mb-3">Today's session</h2>
               {session ? (
                 <ul className="space-y-2">
                   {exercises.map((exercise) => (
                     <li key={exercise.exercise_id} className="flex items-baseline justify-between gap-3">
                       <span className="text-base text-ink">{exercise.name}</span>
-                      <span className="text-sm text-ink-2 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-action whitespace-nowrap">
                         {exercise.sets} × {exercise.target_reps}
                         {exercise.target_weight_lbs ? ` @ ${exercise.target_weight_lbs} lbs` : ""}
                       </span>
@@ -565,7 +566,7 @@ export default function ClientSessionPage() {
               /* Confirmation card: the client checks every number before anything is saved */
               <section className="bg-surface border border-hairline rounded-2xl p-4 space-y-4">
                 <div>
-                  <h2 className="font-display text-xl font-medium text-ink">Check your sets</h2>
+                  <h2 className="section-title font-display text-lg text-ink">Check your sets</h2>
                   <p className="text-sm text-ink-2 mt-0.5">Tap a number to fix it. Nothing is saved yet.</p>
                 </div>
 
@@ -576,11 +577,11 @@ export default function ClientSessionPage() {
                       <div
                         key={set.key}
                         className={`p-3 rounded-xl border space-y-2 ${
-                          set.painFlag ? "bg-warn-bg border-warn-line" : "bg-ground border-hairline"
+                          set.painFlag ? "bg-danger-bg border-danger" : "bg-surface border-hairline"
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="w-6 text-sm font-semibold text-ink-2 text-center">{index + 1}</span>
+                          <span className="w-6 text-sm font-semibold text-action text-center">{index + 1}</span>
                           <label className="flex items-center gap-1 text-sm text-ink-2">
                             <input
                               inputMode="decimal"
@@ -617,8 +618,8 @@ export default function ClientSessionPage() {
                           aria-pressed={set.painFlag}
                           className={`touch-target px-3 rounded-full border flex items-center gap-1.5 text-sm font-semibold ${
                             set.painFlag
-                              ? "bg-warn text-on-action border-warn-line"
-                              : "bg-surface text-muted border-hairline"
+                              ? "bg-danger text-on-action border-danger"
+                              : "bg-ground text-muted border-hairline"
                           }`}
                         >
                           <AlertTriangle className="w-4 h-4" />
@@ -638,7 +639,9 @@ export default function ClientSessionPage() {
                             aria-pressed={effortFor(group.id) === option}
                             className={`touch-target flex-1 rounded-full border text-sm font-semibold capitalize ${
                               effortFor(group.id) === option
-                                ? "bg-action text-on-action border-action"
+                                ? option === "easy"
+                                  ? "bg-action text-on-action border-action"
+                                  : "bg-warn text-on-action border-warn"
                                 : "bg-ground text-ink-2 border-hairline"
                             }`}
                           >
@@ -652,12 +655,12 @@ export default function ClientSessionPage() {
 
                 {hasPain && (
                   <label className="block">
-                    <span className="text-sm font-semibold text-warn">What should your trainer know?</span>
+                    <span className="text-sm font-semibold text-danger">What should your trainer know?</span>
                     <textarea
                       rows={2}
                       value={draft.painSummary}
                       onChange={(e) => updateDraft({ painSummary: e.target.value })}
-                      className="mt-1 w-full p-3 rounded-xl bg-ground border border-warn-line text-ink text-base focus:outline-none focus:ring-2 focus:ring-ink resize-none"
+                      className="mt-1 w-full p-3 rounded-xl bg-ground border border-danger text-ink text-base focus:outline-none focus:ring-2 focus:ring-ink resize-none"
                     />
                   </label>
                 )}
@@ -691,7 +694,7 @@ export default function ClientSessionPage() {
               /* Message box: typing is always available, voice just fills it in */
               <form onSubmit={handlePreview} className="bg-surface border border-hairline rounded-2xl p-4 space-y-3">
                 <div>
-                  <h2 className="font-display text-xl font-medium text-ink">How did it go?</h2>
+                  <h2 className="section-title font-display text-lg text-ink">How did it go?</h2>
                   <p className="text-sm text-ink-2 mt-0.5">
                     Say it however you want: "Bench 135, 3 sets of 10, shoulder felt good."
                   </p>
@@ -719,7 +722,7 @@ export default function ClientSessionPage() {
                       aria-pressed={listening}
                       aria-label={listening ? "Stop dictation" : "Start dictation"}
                       className={`touch-target absolute right-2 top-2 rounded-full flex items-center justify-center ${
-                        listening ? "bg-action text-on-action animate-pulse" : "bg-surface text-ink-2"
+                        listening ? "bg-action text-on-action mic-listening" : "bg-surface text-action border border-hairline"
                       }`}
                     >
                       <Mic className="w-5 h-5" />
@@ -757,7 +760,7 @@ export default function ClientSessionPage() {
 
         {activeTab === "progress" && !loadError && (
           <section className="bg-surface border border-hairline rounded-2xl p-4">
-            <h2 className="font-display text-xl font-medium text-ink mb-1">Your workouts</h2>
+            <h2 className="section-title font-display text-lg text-ink mb-1">Your workouts</h2>
             <p className="text-sm text-ink-2 mb-4">Your most recent saved workouts.</p>
 
             {progress === null ? (
@@ -777,7 +780,7 @@ export default function ClientSessionPage() {
                         })}
                       </span>
                       {log.has_pain_flag && (
-                        <span className="text-xs font-semibold text-warn bg-warn-bg px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold text-danger bg-danger-bg px-2 py-0.5 rounded-full">
                           Pain noted
                         </span>
                       )}

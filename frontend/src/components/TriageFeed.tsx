@@ -12,9 +12,9 @@ import { Check, ChevronDown, Copy } from "lucide-react";
 import type { TriageCard, Urgency } from "@/types";
 
 const URGENCY_STYLES: Record<Urgency, { border: string; tint: string; badge: string; label: string }> = {
-  high: { border: "border-danger", tint: "bg-danger-bg", badge: "bg-danger text-on-action", label: "High" },
-  medium: { border: "border-warn-line", tint: "bg-warn-bg", badge: "bg-warn-line text-warn", label: "Medium" },
-  routine: { border: "border-info-line", tint: "bg-info-bg", badge: "bg-info-bg text-info", label: "Routine" },
+  high: { border: "border-l-danger", tint: "bg-surface", badge: "bg-danger text-on-action", label: "High" },
+  medium: { border: "border-l-warn", tint: "bg-surface", badge: "bg-warn text-on-action", label: "Medium" },
+  routine: { border: "border-l-success", tint: "bg-surface", badge: "bg-success-bg text-success border border-success-line", label: "Routine" },
 };
 
 interface TriageFeedProps {
@@ -62,7 +62,7 @@ export default function TriageFeed({ cards, onDismiss }: TriageFeedProps) {
           const style = URGENCY_STYLES[card.urgency];
           const expanded = expandedId === card.id;
           return (
-            <article key={card.id} className={`p-4 rounded-2xl border-2 space-y-3 ${style.border} ${style.tint}`}>
+            <article key={card.id} className={`p-4 rounded-2xl border border-hairline border-l-4 space-y-3 ${style.border} ${style.tint}`}>
               <button
                 type="button"
                 onClick={() => setExpandedId(expanded ? null : card.id)}
@@ -71,7 +71,7 @@ export default function TriageFeed({ cards, onDismiss }: TriageFeedProps) {
               >
                 <span>
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-display text-base font-medium text-ink">{card.client_name}</span>
+                    <span className="font-display text-base font-bold tracking-tight text-ink">{card.client_name}</span>
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${style.badge}`}>{style.label}</span>
                   </span>
                   <span className="block text-sm text-ink-2 mt-1">{card.reason}</span>

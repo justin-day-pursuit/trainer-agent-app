@@ -340,18 +340,17 @@ export default function TrainerDashboardPage() {
     "w-full h-11 px-3 rounded-lg bg-ground border border-hairline text-sm font-normal text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-ink";
 
   const editField =
-    "w-16 h-10 text-center rounded-lg bg-ground border border-hairline text-sm font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-ink";
+    "w-16 h-11 text-center rounded-lg bg-ground border border-hairline text-sm font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-ink";
 
   return (
     <div className="flex-1 flex flex-col h-full bg-ground text-ink">
       <header className="relative px-4 py-3 bg-ground border-b border-hairline sticky top-0 z-20 flex items-center justify-between gap-3">
-        <span aria-hidden="true" className="brand-gradient absolute inset-x-0 top-0 h-1" />
         <Link href="/" className="flex items-center gap-2">
-          <div className="brand-gradient p-1.5 rounded-lg text-on-action">
+          <div className="bg-action p-1.5 rounded-lg text-on-action">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-display text-base font-medium text-ink">Trainer Dashboard</h1>
+            <h1 className="font-display text-base font-extrabold uppercase tracking-tight text-ink">Trainer Dashboard</h1>
             <p className="text-sm text-muted">Weekly plan review</p>
           </div>
         </Link>
@@ -477,14 +476,14 @@ export default function TrainerDashboardPage() {
 
       <div className="px-4 pt-4 pb-2">
         <div className="relative max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-muted" />
+          <Search className="w-4 h-4 absolute left-3 top-3.5 text-muted" />
           <input
             type="text"
             placeholder="Search clients..."
             aria-label="Search clients"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-surface border border-hairline rounded-xl text-sm text-ink placeholder-muted focus:outline-none focus:ring-1 focus:ring-ink"
+            className="w-full h-11 pl-9 pr-3 bg-surface border border-hairline rounded-xl text-sm text-ink placeholder-muted focus:outline-none focus:ring-1 focus:ring-ink"
           />
         </div>
       </div>
@@ -493,7 +492,7 @@ export default function TrainerDashboardPage() {
         <TriageFeed cards={visibleTriage} onDismiss={dismissCard} />
 
         <div>
-          <h2 className="section-title font-display text-lg font-medium text-ink">Plans to review ({visiblePlans.length})</h2>
+          <h2 className="section-title font-display text-lg text-ink">Ready for review ({visiblePlans.length})</h2>
           <p className="text-sm text-ink-2">Next week&apos;s targets, drafted after each logged workout.</p>
         </div>
         {loadError && <p className="p-4 bg-warn-bg border border-warn-line rounded-xl text-warn text-base">{loadError}</p>}
@@ -509,7 +508,7 @@ export default function TrainerDashboardPage() {
             <section key={group.key} className="space-y-3" aria-label={group.title}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className={`font-display text-lg font-medium ${group.key === "auto_approve" ? "text-success" : "text-danger"}`}>
+                  <h2 className={`font-display text-base font-extrabold uppercase tracking-tight ${group.key === "auto_approve" ? "text-success" : "text-danger"}`}>
                     {group.title} ({group.plans.length})
                   </h2>
                   <p className="text-sm text-ink-2">{group.subtitle}</p>
@@ -530,15 +529,20 @@ export default function TrainerDashboardPage() {
           const editing = editingPlanId === plan.id;
           const busy = busyPlanId === plan.id;
           return (
-            <article key={plan.id} className="p-4 rounded-2xl border bg-surface border-hairline space-y-3">
+            <article
+              key={plan.id}
+              className={`p-4 rounded-2xl border border-l-4 bg-surface border-hairline space-y-3 ${
+                plan.review_group === "auto_approve" ? "border-l-success" : "border-l-danger"
+              }`}
+            >
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display text-lg font-medium text-ink">{plan.client_name}</h3>
+                  <h3 className="font-display text-lg font-bold tracking-tight text-ink">{plan.client_name}</h3>
                   {plan.badges.map((badge) => (
                     <span
                       key={badge}
                       className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        badge === "Pain Reported" ? "bg-danger text-on-action" : "bg-danger-bg text-danger"
+                        badge === "Pain Reported" ? "bg-danger text-on-action" : "bg-warn-bg text-warn border border-warn-line"
                       }`}
                     >
                       {badge}
@@ -557,7 +561,7 @@ export default function TrainerDashboardPage() {
               </div>
 
               {plan.safety_flags.map((flag, index) => (
-                <div key={index} role="alert" className="p-3 bg-warn-bg border border-warn-line rounded-xl flex items-start gap-2 text-sm text-warn">
+                <div key={index} role="alert" className="p-3 bg-danger-bg border border-danger rounded-xl flex items-start gap-2 text-sm text-danger">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold">{flag.message}</p>
@@ -578,7 +582,7 @@ export default function TrainerDashboardPage() {
                   <li
                     key={exercise.exercise_id}
                     className={`p-3 rounded-xl border grid grid-cols-1 md:grid-cols-[1.1fr_1fr_1fr_1.4fr] gap-x-3 gap-y-1 md:items-center ${
-                      exercise.pain_reported ? "bg-warn-bg border-warn-line" : "bg-ground border-hairline"
+                      exercise.pain_reported ? "bg-danger-bg border-danger" : "bg-ground border-hairline"
                     }`}
                   >
                     <span className="text-base font-semibold text-ink">{exercise.name}</span>
@@ -611,7 +615,7 @@ export default function TrainerDashboardPage() {
                         />
                       </span>
                     ) : (
-                      <span className="text-sm font-semibold text-ink">
+                      <span className="text-sm font-bold text-action">
                         <span className="md:hidden">Next week: </span>
                         {exercise.sets} × {exercise.target_reps} @ {weightLabel(exercise.target_weight_lbs)}
                       </span>
