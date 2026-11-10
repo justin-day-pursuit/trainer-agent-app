@@ -89,6 +89,7 @@ def test_logging_creates_a_draft_with_reasons_and_a_pain_flag(api):
     assert draft["overall_effort"] == "challenging"
     assert draft["safety_flags"][0]["message"].startswith("[Pain Reported]")
     assert draft["week_label"].startswith("Week 2")
+    assert draft["client_message"] == "x"
 
 
 def test_a_new_log_replaces_the_earlier_draft(api):
@@ -174,6 +175,7 @@ def test_logging_locks_the_link_until_the_trainer_approves(api):
     view = api.get("/api/v1/s/t").json()
     assert view["link_status"] == "pending_review"
     assert len(view["last_session"]["sets"]) == 6
+    assert view["last_session"]["message"] == "x"
     draft = only_draft(api)
     assert draft["status"] == "pending_approval"
     api.post(f"/api/v1/trainer/plans/{draft['id']}/approve")

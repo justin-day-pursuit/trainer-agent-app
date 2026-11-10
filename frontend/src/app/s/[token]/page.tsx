@@ -18,11 +18,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   Loader2,
   Mic,
   RotateCcw,
+  Send,
   Trash2,
 } from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -36,6 +39,7 @@ interface SessionView {
   link_status: "active" | "pending_review";
   last_session: {
     logged_at: string;
+    message: string | null;
     sets: ExtractedSet[];
     has_pain_flag: boolean;
     pain_summary: string | null;
@@ -122,6 +126,64 @@ function toEditable(sets: ExtractedSet[]): EditableSet[] {
   }));
 }
 
+/** "3 × 10 @ 155 lbs" when every set matches, otherwise each set's reps. */
+function summarizeSets(rows: { reps: string; weight: string }[]): string {
+  const reps = rows.map((row) => row.reps);
+  const weights = Array.from(new Set(rows.map((row) => row.weight).filter(Boolean)));
+  const repsText = new Set(reps).size === 1 ? `${rows.length} × ${reps[0]}` : `${reps.join(", ")} reps`;
+  return weights.length ? `${repsText} @ ${weights.join(" / ")} lbs` : `${repsText} (bodyweight)`;
+}
+
+/** The server stores UTC without a zone marker, so treat a bare timestamp as UTC. */
+const timeLabel = (iso: string) =>
+  new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`).toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+/** Three steps so the client always knows where they are and whether anything was sent. */
+function StepBar({ step }: { step: 1 | 2 | 3 }) {
+  const labels = ["Tell us", "Check", "Sent"];
+  return (
+    <ol className="flex items-center gap-2" aria-label={`Step ${step} of 3: ${labels[step - 1]}`}>
+      {labels.map((label, index) => {
+        const n = index + 1;
+        const done = n < step || step === 3;
+        const current = n === step;
+        return (
+          <li key={label} className="flex flex-1 items-center gap-2 min-w-0">
+            <span
+              className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
+                done || current ? "bg-action text-on-action" : "border border-hairline text-muted"
+              }`}
+              aria-current={current ? "step" : undefined}
+            >
+              {done && !current ? <Check className="h-3.5 w-3.5" /> : n}
+            </span>
+            <span className={`truncate text-xs font-bold uppercase tracking-tight ${current ? "text-ink" : "text-muted"}`}>
+              {label}
+            </span>
+            {n < 3 && <span className={`h-px flex-1 ${n < step ? "bg-action" : "bg-hairline"}`} />}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** The client's own message as a sent chat bubble. */
+function SentBubble({ message, sentAt }: { message: string; sentAt: string | null }) {
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-action px-4 py-3 text-base text-on-action">{message}</p>
+      <p className="flex items-center gap-1 text-xs font-semibold text-success">
+        <Check className="h-3.5 w-3.5" />
+        Sent to your trainer{sentAt ? ` · ${timeLabel(sentAt)}` : ""}
+      </p>
+    </div>
+  );
+}
+
 export default function ClientSessionPage() {
   const params = useParams();
   const token = (params?.token as string) || "demo-session";
@@ -137,6 +199,9 @@ export default function ClientSessionPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [restorable, setRestorable] = useState<Draft | null>(null);
+  const [emptyHint, setEmptyHint] = useState(false);
+  const [openIds, setOpenIds] = useState<string[]>([]);
+  const stepTopRef = useRef<HTMLElement | null>(null);
 
   const [progress, setProgress] = useState<ProgressLog[] | null>(null);
 
@@ -228,6 +293,12 @@ export default function ClientSessionPage() {
 
   useEffect(() => () => recognizerRef.current?.stop(), []);
 
+  // Bring each new step into view so the change is impossible to miss
+  const step: 1 | 2 | 3 = isPending || phase === "saved" ? 3 : phase === "review" ? 2 : 1;
+  useEffect(() => {
+    if (step > 1) stepTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
+
   const exercises = session?.active_plan.exercises ?? [];
   const exerciseName = (id: string) => exercises.find((e) => e.exercise_id === id)?.name ?? id;
 
@@ -282,7 +353,11 @@ export default function ClientSessionPage() {
 
   const handlePreview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (draft.rawInput.trim().length < 2 || phase === "analyzing") return;
+    if (phase === "analyzing") return;
+    if (draft.rawInput.trim().length < 2) {
+      setEmptyHint(true);
+      return;
+    }
     recognizerRef.current?.stop();
 
     setPhase("analyzing");
@@ -314,6 +389,7 @@ export default function ClientSessionPage() {
         painSummary: result.pain_summary ?? "",
         badge: `Extracted by ${result.model_name} in ${Math.round(result.execution_time_ms)}ms`,
       });
+      setOpenIds(Array.from(new Set(result.extracted_sets.filter((set) => set.pain_flag).map((set) => set.exercise_id))));
       setPhase("review");
     } catch (error) {
       setErrorMessage(
@@ -457,6 +533,11 @@ export default function ClientSessionPage() {
             My Progress
           </button>
         </div>
+        {activeTab === "workout" && !loadError && session && (
+          <div className="w-full pt-1">
+            <StepBar step={step} />
+          </div>
+        )}
       </header>
 
       <div className="flex-1 scrollable-container p-4 space-y-4">
@@ -466,16 +547,20 @@ export default function ClientSessionPage() {
 
         {activeTab === "workout" && !loadError && isPending ? (
           /* Waiting on the trainer: this stays in place through reloads until they approve */
-          <section className="space-y-4">
+          <section ref={stepTopRef} className="space-y-4 scroll-mt-48">
             <div className="p-4 bg-success-bg border border-success-line rounded-2xl" role="status">
               <p className="flex items-center gap-2 font-display text-xl font-extrabold tracking-tight text-success">
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                Session Logged! Great work.
+                Sent to your trainer. Great work.
               </p>
               <p className="text-base text-ink-2 mt-1">
-                Your trainer is reviewing your results to unlock next week's targets.
+                They&apos;ll review it and unlock next week&apos;s targets. This page updates on its own.
               </p>
             </div>
+
+            {session?.last_session?.message && (
+              <SentBubble message={session.last_session.message} sentAt={session.last_session.logged_at} />
+            )}
 
             <div className="bg-surface border border-hairline rounded-2xl p-4 space-y-3">
               <h2 className="section-title font-display text-lg text-ink">What you logged</h2>
@@ -530,7 +615,7 @@ export default function ClientSessionPage() {
               <div className="p-4 bg-success-bg border border-success-line rounded-xl space-y-3" role="status">
                 <div className="flex items-center gap-3 text-success text-base font-semibold">
                   <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                  <span>Workout logged! Your trainer is reviewing next week.</span>
+                  <span>Sent to your trainer. They&apos;re reviewing next week.</span>
                 </div>
                 <button
                   type="button"
@@ -564,16 +649,46 @@ export default function ClientSessionPage() {
 
             {phase === "review" ? (
               /* Confirmation card: the client checks every number before anything is saved */
-              <section className="bg-surface border border-hairline rounded-2xl p-4 space-y-4">
+              <section ref={stepTopRef} className="bg-surface border border-hairline rounded-2xl p-4 space-y-4 scroll-mt-48">
                 <div>
                   <h2 className="section-title font-display text-lg text-ink">Check your sets</h2>
-                  <p className="text-sm text-ink-2 mt-0.5">Tap a number to fix it. Nothing is saved yet.</p>
+                  <p className="text-sm text-ink-2 mt-0.5">
+                    Not sent yet. Tap an exercise to fix a number, then send it to your trainer.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-end gap-1">
+                  <p className="max-w-[85%] rounded-2xl rounded-br-sm border border-hairline bg-ground px-4 py-3 text-sm text-ink-2">
+                    {draft.rawInput}
+                  </p>
+                  <p className="text-xs font-semibold text-muted">Draft · not sent</p>
                 </div>
 
                 {groupedSets.map((group) => (
-                  <div key={group.id} className="space-y-2">
-                    <h3 className="text-base font-semibold text-ink">{exerciseName(group.id)}</h3>
-                    {group.rows.map((set, index) => (
+                  <div key={group.id} className="space-y-2 rounded-xl border border-hairline bg-ground p-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenIds((ids) => (ids.includes(group.id) ? ids.filter((id) => id !== group.id) : [...ids, group.id]))
+                      }
+                      aria-expanded={openIds.includes(group.id)}
+                      className="touch-target flex w-full items-center justify-between gap-3 text-left"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-base font-bold tracking-tight text-ink">{exerciseName(group.id)}</span>
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-action">
+                          {summarizeSets(group.rows)}
+                          {group.rows.some((set) => set.painFlag) && (
+                            <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-on-action">Pain flagged</span>
+                          )}
+                        </span>
+                      </span>
+                      <span className="flex flex-shrink-0 items-center gap-1 text-xs font-semibold text-muted">
+                        {openIds.includes(group.id) ? "Done" : "Edit"}
+                        <ChevronDown className={`h-4 w-4 transition-transform ${openIds.includes(group.id) ? "rotate-180" : ""}`} />
+                      </span>
+                    </button>
+                    {openIds.includes(group.id) && group.rows.map((set, index) => (
                       <div
                         key={set.key}
                         className={`p-3 rounded-xl border space-y-2 ${
@@ -655,7 +770,7 @@ export default function ClientSessionPage() {
 
                 {hasPain && (
                   <label className="block">
-                    <span className="text-sm font-semibold text-danger">What should your trainer know?</span>
+                    <span className="text-sm font-semibold text-danger">What should your trainer know about the pain?</span>
                     <textarea
                       rows={2}
                       value={draft.painSummary}
@@ -667,21 +782,6 @@ export default function ClientSessionPage() {
 
                 {draft.badge && <p className="text-xs text-muted">{draft.badge}</p>}
 
-                {errorMessage && <p className="text-sm text-warn">{errorMessage}</p>}
-
-                {!effortsAnswered && (
-                  <p className="text-sm text-ink-2">Choose how each exercise felt to save.</p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  disabled={!setsAreValid || saving}
-                  className="w-full touch-target py-3 bg-action hover:bg-action-hover disabled:opacity-50 text-on-action font-semibold rounded-full text-base flex items-center justify-center gap-2"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  <span>{saving ? "Saving..." : "Confirm & Save Workout"}</span>
-                </button>
                 <button
                   type="button"
                   onClick={backToEditing}
@@ -689,6 +789,27 @@ export default function ClientSessionPage() {
                 >
                   Back to my message
                 </button>
+                {/* Room for the pinned send bar */}
+                <div className="h-28" aria-hidden="true" />
+
+                <div
+                  className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 space-y-2 border-t border-hairline bg-ground/95 px-4 pt-3 backdrop-blur"
+                  style={{ paddingBottom: "calc(1rem + var(--safe-bottom))" }}
+                >
+                  {errorMessage && <p className="text-sm text-warn" role="alert">{errorMessage}</p>}
+                  {!effortsAnswered && (
+                    <p className="text-sm text-ink-2">Pick Easy or Challenging for each exercise to send.</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleConfirm}
+                    disabled={!setsAreValid || saving}
+                    className="w-full touch-target py-3 bg-action hover:bg-action-hover disabled:opacity-50 text-on-action font-bold rounded-full text-base flex items-center justify-center gap-2"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    <span>{saving ? "Sending..." : "Send to Trainer"}</span>
+                  </button>
+                </div>
               </section>
             ) : phase !== "saved" ? (
               /* Message box: typing is always available, voice just fills it in */
@@ -710,7 +831,10 @@ export default function ClientSessionPage() {
                   <textarea
                     rows={4}
                     value={draft.rawInput}
-                    onChange={(e) => updateDraft({ rawInput: e.target.value })}
+                    onChange={(e) => {
+                      updateDraft({ rawInput: e.target.value });
+                      setEmptyHint(false);
+                    }}
                     aria-label="Describe your workout"
                     placeholder="What did you lift? Anything feel off?"
                     className="w-full p-3 pr-14 rounded-xl bg-ground border border-hairline text-ink placeholder-muted text-base focus:outline-none focus:ring-2 focus:ring-ink resize-none"
@@ -731,9 +855,24 @@ export default function ClientSessionPage() {
                 </div>
 
                 {phase === "analyzing" && (
-                  <p className="flex items-center gap-2 text-sm text-ink-2" role="status">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Workout Logger analyzing workout with {LOGGER_MODEL}...
+                  <div className="space-y-3 rounded-xl border border-action bg-ground p-4" role="status">
+                    <p className="flex items-center gap-2 text-base font-bold text-ink">
+                      <Loader2 className="w-5 h-5 animate-spin text-action" />
+                      Reading your workout...
+                    </p>
+                    <p className="text-sm text-ink-2">Turning your message into sets. This takes a few seconds.</p>
+                    <div className="space-y-2" aria-hidden="true">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="h-3 animate-pulse rounded-full bg-hairline" style={{ width: `${90 - i * 20}%` }} />
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted">Read by {LOGGER_MODEL}</p>
+                  </div>
+                )}
+
+                {emptyHint && (
+                  <p className="text-sm font-semibold text-warn" role="alert">
+                    Tell us what you lifted first. Type it, or tap the mic and say it.
                   </p>
                 )}
 
@@ -745,14 +884,15 @@ export default function ClientSessionPage() {
 
                 <button
                   type="submit"
-                  disabled={phase === "analyzing" || draft.rawInput.trim().length < 2}
+                  disabled={phase === "analyzing"}
                   className="w-full touch-target py-3 bg-action hover:bg-action-hover disabled:opacity-50 text-on-action font-semibold rounded-full text-base flex items-center justify-center gap-2"
                 >
                   {phase === "error" && <RotateCcw className="w-4 h-4" />}
                   <span>
-                    {phase === "analyzing" ? "Reading..." : phase === "error" ? "Try Again" : "Preview Workout"}
+                    {phase === "analyzing" ? "Reading..." : phase === "error" ? "Try Again" : "Next: Check My Sets"}
                   </span>
                 </button>
+                <p className="text-center text-xs text-muted">Not sent yet. You&apos;ll check your sets, then send them to your trainer.</p>
               </form>
             ) : null}
           </>

@@ -43,6 +43,7 @@ interface PendingPlan {
   client_name: string;
   week_label: string;
   last_workout_at: string | null;
+  client_message: string | null;
   overall_effort: Effort | null;
   exercises: DraftExercise[];
   safety_flags: SafetyFlag[];
@@ -559,6 +560,13 @@ export default function TrainerDashboardPage() {
                   {plan.week_label}
                 </p>
               </div>
+
+              {plan.client_message && (
+                <figure className="rounded-xl border border-hairline border-l-4 border-l-action bg-ground px-4 py-3">
+                  <figcaption className="text-xs font-bold uppercase tracking-tight text-muted">In their words</figcaption>
+                  <blockquote className="mt-1 text-base text-ink">&ldquo;{plan.client_message}&rdquo;</blockquote>
+                </figure>
+              )}
 
               {plan.safety_flags.map((flag, index) => (
                 <div key={index} role="alert" className="p-3 bg-danger-bg border border-danger rounded-xl flex items-start gap-2 text-sm text-danger">
