@@ -9,7 +9,8 @@ This module provides two distinct security flows for the application:
    needing to sign up with an email and password.
 """
 
-from typing import Optional
+import asyncio
+from typing import Any, Optional, Tuple
 import jwt
 from fastapi import Depends, Header, HTTPException, Path, status
 from sqlalchemy import select
@@ -19,6 +20,30 @@ from app.core.config import get_settings
 from app.core.database import get_db
 
 settings = get_settings()
+_jwks_client: Optional[jwt.PyJWKClient] = None
+
+
+def _get_jwks_client() -> jwt.PyJWKClient:
+    """Fetches and caches the public keys Supabase signs its tokens with."""
+    global _jwks_client
+    if _jwks_client is None:
+        _jwks_client = jwt.PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
+    return _jwks_client
+
+
+async def _resolve_signing_key(token: str) -> Tuple[Any, str]:
+    """
+    Picks the key to verify a token with. Supabase projects sign with either a public-key
+    pair (ES256) or a shared secret (HS256). Only these two are ever accepted, and each
+    is tied to its own kind of key, so a token can't choose a weaker way to be checked.
+    """
+    algorithm = jwt.get_unverified_header(token).get("alg")
+    if algorithm == "ES256":
+        signing_key = await asyncio.to_thread(_get_jwks_client().get_signing_key_from_jwt, token)
+        return signing_key.key, algorithm
+    if algorithm == "HS256" and settings.supabase_jwt_secret:
+        return settings.supabase_jwt_secret, algorithm
+    raise jwt.InvalidAlgorithmError(f"Unsupported token algorithm: {algorithm}")
 
 
 async def get_current_trainer(
@@ -48,14 +73,8 @@ async def get_current_trainer(
     token = authorization.split(" ")[1]
 
     try:
-        # Decode and verify the JWT against the Supabase secret
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-        return payload
+        key, algorithm = await _resolve_signing_key(token)
+        return jwt.decode(token, key, algorithms=[algorithm], audience="authenticated")
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
