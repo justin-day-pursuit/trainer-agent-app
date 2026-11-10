@@ -77,17 +77,23 @@ export interface ClientSession {
   created_at: string;
 }
 
+export type Urgency = "high" | "medium" | "routine";
+
 export interface TriageCard {
+  id: number;
   client_id: number;
   client_name: string;
-  urgency: "high" | "medium" | "low";
+  urgency: Urgency;
   reason: string;
-  recommended_action: string;
-  draft_message?: string | null;
+  draft_message: string;
 }
 
-export interface TrainerDashboardData {
-  pending_drafts_count: number;
-  total_active_clients: number;
-  triage_queue: TriageCard[];
+export interface RosterClient {
+  client_id: number;
+  full_name: string;
+  primary_goal: string | null;
+  last_active_at: string | null;
+  days_inactive: number;
+  urgency: Urgency;
+  session_token: string | null;
 }

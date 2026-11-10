@@ -14,7 +14,9 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Copy, Loader2, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import type { Effort, SafetyFlag } from "@/types";
+import ClientRoster from "@/components/ClientRoster";
+import TriageFeed from "@/components/TriageFeed";
+import type { Effort, RosterClient, SafetyFlag, TriageCard } from "@/types";
 
 interface DraftExercise {
   exercise_id: string;
@@ -84,8 +86,13 @@ export default function TrainerDashboardPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
 
+  const [triageCards, setTriageCards] = useState<TriageCard[]>([]);
+  const [roster, setRoster] = useState<RosterClient[]>([]);
+
   const [addingClient, setAddingClient] = useState(false);
   const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
   const [clientGoal, setClientGoal] = useState("");
   const [clientInjuries, setClientInjuries] = useState("");
   const [startingRows, setStartingRows] = useState<StartingRow[]>([blankRow(0)]);
@@ -119,6 +126,39 @@ export default function TrainerDashboardPage() {
         if (!handleAuthError(error)) setLoadError("We couldn't load your plans. Refresh to try again.");
       });
   }, [authToken, handleAuthError]);
+
+  // Loaded separately so a slow check-in draft never holds up the plan review queue
+  const loadTriage = useCallback(async () => {
+    try {
+      const token = await authToken();
+      const data = await apiFetch<{ triage_cards: TriageCard[]; roster: RosterClient[] }>("/trainer/triage", { token });
+      setTriageCards(data.triage_cards);
+      setRoster(data.roster);
+    } catch (error) {
+      handleAuthError(error);
+    }
+  }, [authToken, handleAuthError]);
+
+  useEffect(() => {
+    loadTriage();
+  }, [loadTriage]);
+
+  const dismissCard = async (cardId: number) => {
+    const token = await authToken();
+    await apiFetch(`/trainer/triage/${cardId}/dismiss`, { method: "POST", token });
+    setTriageCards((cards) => cards.filter((card) => card.id !== cardId));
+  };
+
+  const getClientLink = async (client: RosterClient) => {
+    let sessionToken = client.session_token;
+    if (!sessionToken) {
+      const token = await authToken();
+      const created = await apiFetch<{ session_token: string }>(`/clients/${client.client_id}/sessions`, { method: "POST", token });
+      sessionToken = created.session_token;
+      loadTriage();
+    }
+    return `${window.location.origin}/s/${sessionToken}`;
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -180,6 +220,8 @@ export default function TrainerDashboardPage() {
 
   const resetClientForm = () => {
     setClientName("");
+    setClientEmail("");
+    setClientPhone("");
     setClientGoal("");
     setClientInjuries("");
     setStartingRows([blankRow(0)]);
@@ -214,6 +256,8 @@ export default function TrainerDashboardPage() {
         token,
         body: JSON.stringify({
           full_name: clientName,
+          email: clientEmail.trim() || null,
+          phone: clientPhone.trim() || null,
           primary_goal: clientGoal.trim() || null,
           injuries: clientInjuries.split(","),
           exercises: startingRows.map((row) => ({
@@ -228,6 +272,7 @@ export default function TrainerDashboardPage() {
       setCopied(false);
       setAddingClient(false);
       resetClientForm();
+      loadTriage();
     } catch (error) {
       if (!handleAuthError(error)) {
         setAddError(error instanceof ApiError ? error.message : "We couldn't add that client. Try again.");
@@ -347,6 +392,14 @@ export default function TrainerDashboardPage() {
               <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={`${textField} mt-1`} />
             </label>
             <label className="block text-sm font-semibold text-ink">
+              Email
+              <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} className={`${textField} mt-1`} />
+            </label>
+            <label className="block text-sm font-semibold text-ink">
+              Phone
+              <input type="tel" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} className={`${textField} mt-1`} />
+            </label>
+            <label className="block text-sm font-semibold text-ink">
               Goals
               <input value={clientGoal} onChange={(e) => setClientGoal(e.target.value)} placeholder="Build muscle" className={`${textField} mt-1`} />
             </label>
@@ -436,11 +489,13 @@ export default function TrainerDashboardPage() {
       </div>
 
       <div className="flex-1 scrollable-container p-4 space-y-4">
+        <TriageFeed cards={triageCards} onDismiss={dismissCard} />
+
         {loadError && <p className="p-4 bg-warn-bg border border-warn-line rounded-xl text-warn text-base">{loadError}</p>}
         {!loadError && plans === null && <p className="text-sm text-muted">Loading plans...</p>}
         {plans !== null && visiblePlans.length === 0 && !loadError && (
           <p className="text-base text-ink-2">
-            {plans.length === 0 ? "All caught up. New drafts appear here after clients log workouts." : "No clients match that search."}
+            {plans.length === 0 ? "No plans waiting for review. New drafts appear here after clients log workouts." : "No clients match that search."}
           </p>
         )}
 
@@ -588,6 +643,8 @@ export default function TrainerDashboardPage() {
             </section>
           )
         )}
+
+        {roster.length > 0 && <ClientRoster clients={roster} getClientLink={getClientLink} />}
       </div>
     </div>
   );

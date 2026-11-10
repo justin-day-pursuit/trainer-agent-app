@@ -10,6 +10,7 @@ from app.models.trainer import Trainer
 from app.models.client import ClientProfile, ClientSession
 from app.models.workout import WorkoutPlan, WorkoutLog
 from app.models.trace import AgentTrace
+from app.models.triage import TriageAlert
 
 __all__ = [
     "Base",
@@ -19,4 +20,5 @@ __all__ = [
     "WorkoutPlan",
     "WorkoutLog",
     "AgentTrace",
+    "TriageAlert",
 ]

@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_trainer
 from app.core.config import get_settings
+from app.api.v1.endpoints.trainer import get_trainer_id
 from app.core.database import get_db
 from app.models.client import ClientProfile, ClientSession
 from app.schemas.client import (
@@ -35,9 +36,9 @@ async def create_client(
     """
     Creates a new client profile under the authenticated trainer's roster.
     """
-    # Create client record
+    trainer_id = await get_trainer_id(db, current_trainer)
     new_client = ClientProfile(
-        trainer_id=1,  # In production, resolved from current_trainer["sub"]
+        trainer_id=trainer_id,
         full_name=payload.full_name,
         email=payload.email,
         phone=payload.phone,
@@ -73,7 +74,12 @@ async def list_clients(
     """
     Retrieves all clients managed by the authenticated trainer.
     """
-    stmt = select(ClientProfile).order_by(ClientProfile.full_name.asc())
+    trainer_id = await get_trainer_id(db, current_trainer)
+    stmt = (
+        select(ClientProfile)
+        .where(ClientProfile.trainer_id == trainer_id)
+        .order_by(ClientProfile.full_name.asc())
+    )
     result = await db.execute(stmt)
     clients = result.scalars().all()
 
@@ -107,6 +113,20 @@ async def generate_client_session_link(
     The trainer sends this URL to the client. The client taps the link to open
     their in-gym workout logger without needing an email or password.
     """
+    trainer_id = await get_trainer_id(db, current_trainer)
+    owned = await db.execute(
+        select(ClientProfile.id).where(ClientProfile.id == client_id, ClientProfile.trainer_id == trainer_id)
+    )
+    if owned.scalars().first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found.")
+
+    # A new link replaces the old one, so a shared link can be revoked
+    older = await db.execute(
+        select(ClientSession).where(ClientSession.client_id == client_id, ClientSession.is_active == True)  # noqa: E712
+    )
+    for session in older.scalars().all():
+        session.is_active = False
+
     token_str = str(uuid.uuid4())
     session_record = ClientSession(
         client_id=client_id,
