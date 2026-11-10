@@ -1,0 +1,22 @@
+# Keep local credentials and developer overrides out of every Docker build context.
+.env
+.env.*
+!.env.example
+
+# Exclude local dependencies, generated Python files, and test/tool caches.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Exclude source-control and editor metadata that the running API never needs.
+.git/
+.gitignore
+.DS_Store
+*.log
