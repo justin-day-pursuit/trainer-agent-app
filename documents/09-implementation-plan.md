@@ -130,7 +130,7 @@ The following issues exist in the current scaffolding and are addressed by speci
 | `approve_workout_plan` does not archive the prior approved plan | `scalar_one_or_none` on client page may error with two approved rows | Wave 2 (archive in same transaction) |
 | Dashboard draft query has no `trainer_id` scope | Returns every trainer's drafts in multi-tenant scenario | Wave 2 (scope queries by trainer) |
 | No `POST /trainer/clients/{id}/plan-next-week` route | Gate 2 says "trigger weekly planning" but no route exists | Wave 2 (add planning trigger endpoint) |
-| Dismiss alert has no persistence | Next dashboard load brings dismissed triage cards back | Wave 3 (add dismissal record table or column) |
+| Dismiss alert has no persistence | Next dashboard load brings dismissed triage cards back | Resolved in Wave 3: `dismissed_at` on `triage_alerts` |
 | No `prescribed_sessions_per_week` column | "Missed workouts" can only mean "no log in N days" | Wave 3 (scope adherence as days-since-last-log; defer sessions-per-week) |
 | Agent observability indicators placed in Wave 4 | Loading spinner, model name, and retry button are core UX for Wave 1 logging | Wave 1 (moved up from Wave 4) |
 
@@ -347,7 +347,7 @@ flowchart TD
 ### Wave 2: Deterministic Progression Engine & Progression Planner (Safety Cross-Check & Trainer Review)
 
 **Objective**: Ship the reps-first progression loop. `EffortBasedProgression` drafts next week's weights and reps, one exercise at a time.
-The Progression Planner flags a held, pain-free, same-weight lift and does not change weights. A real planner call writes one `agent_traces` row. Wave 3 and Wave 4 are not done.
+The Progression Planner flags a held, pain-free, same-weight lift and does not change weights. A real planner call writes one `agent_traces` row. Wave 3 has shipped. Wave 4 is not done.
 
 #### 🎨 Yadan's Lane (Progression Calculation Rules & Trainer Review Dashboard)
 
@@ -416,7 +416,7 @@ The Progression Planner flags a held, pain-free, same-weight lift and does not c
 
 #### 🤝 Joint Sync Gate 2 (Checklist before Wave 3)
 
-Checked items match the shipped engine and planner. Wave 3 and Wave 4 are not done. The earlier squat `185 → 190` check, and the check that the planner flags shoulder history on a bench increase, are superseded.
+Checked items match the shipped engine and planner. Wave 3 has shipped. Wave 4 is not done. The earlier squat `185 → 190` check, and the check that the planner flags shoulder history on a bench increase, are superseded.
 
 - [x] Run `pytest tests/test_progression_engine.py`. `EffortBasedProgression` is the live rule. Easy `ex_squat` at 8 reps stays 185 lb and becomes 10 reps. `ex_bench` with pain and a missed set holds 135 lb and 10 reps. Pain on bench does not hold squat.
 - [x] Pain, missed reps, a missing set, challenging, or no effort holds weight and reps. Easy under 12 reps adds 2 reps (cap 12). Easy at 12 reps adds 5 lb and resets reps to 8. Easy bodyweight at 12 holds, and the trainer decides.
@@ -429,7 +429,7 @@ Checked items match the shipped engine and planner. Wave 3 and Wave 4 are not do
 
 ### Wave 3: Trainer Assistant (Triage, Adherence & Outreach) & Trainer Admin Suite
 
-**Status**: Not done.
+**Status**: Shipped. Python ranks urgency: pain or more than 7 days is high, more than 4 days is medium, and on track is `routine`. Claude Sonnet 5.5 only writes the check-in, and nothing is sent to the client. Alerts live in `triage_alerts`, and `dismissed_at` hides one until something new happens. `GET /api/v1/trainer/triage` returns the live cards and the roster. The dashboard route stays the plan queue. The trainer page shows the on-screen feed (copy, edit, dismiss) and the scrollable roster.
 
 **Objective**: Deploy the administrative assistant agent. The Trainer Assistant evaluates client training cadence based on **days since last workout log** (not prescribed sessions, since no such column exists). The system surfaces drop-offs, pre-drafts contextual check-in messages, and exposes client onboarding with session link generation.
 
@@ -441,15 +441,15 @@ Checked items match the shipped engine and planner. Wave 3 and Wave 4 are not do
 - Urgency is computed **deterministically in Python**, not by the model:
   - High: No log in $>7$ days OR active pain flag on most recent log.
   - Medium: No log in $>4$ days.
-  - Low: Active and on track.
+  - Routine: Active and on track. The on-track value is `routine`.
 - The Trainer Assistant's only LLM task: draft a friendly, encouraging check-in message given the client's name, goal, and days since last log. The model does **not** compute urgency levels.
 - Output structured `TriageCard` objects.
 - System boundary: The Trainer Assistant **never sends messages directly to clients**; drafts require trainer sign-off.
 
 **Task 3.2: Triage Feed & Dismissal API**
-- Implement `GET /api/v1/trainer/dashboard` returning live triage cards (replacing hardcoded mock data).
-- Add a `triage_dismissals` table (or `dismissed_at` column on a lightweight tracking table) so dismissed alerts don't reappear on the next dashboard load.
-- Implement `POST /api/v1/trainer/triage/{card_id}/dismiss` to record dismissal.
+- `GET /api/v1/trainer/triage` returns the live cards and the roster. The dashboard route stays the plan queue.
+- `triage_alerts` stores the drafted check-in. `dismissed_at` keeps a dismissed alert from coming back until something new happens for that client.
+- `POST /api/v1/trainer/triage/{card_id}/dismiss` sets `dismissed_at`.
 
 **Task 3.3: Client Roster & Session Link API**
 - In `backend/app/api/v1/endpoints/clients.py`:

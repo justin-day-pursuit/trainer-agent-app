@@ -11,16 +11,21 @@ The Trainer Assistant model only writes the check-in message for an alert.
 """
 
 import asyncio
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import object_session
 
 from app.agents.trainer_agent import TrainerAssistantAgent
 from app.models.client import ClientProfile, ClientSession
 from app.models.triage import TriageAlert
 from app.models.workout import WorkoutLog
+
+logger = logging.getLogger(__name__)
 
 HIGH_INACTIVE_DAYS = 7
 MEDIUM_INACTIVE_DAYS = 4
@@ -90,10 +95,68 @@ def _alert_key(row: Dict[str, Any]) -> str:
     return f"{cause}:{row['last_log_id'] or 'none'}"
 
 
+def _drop_unsaved_alert(db: AsyncSession, alert: TriageAlert) -> None:
+    """Forgets an alert that did not save, so a later commit cannot insert it again.
+
+    A failed bookmark should already forget the object. This is a second
+    check for the case where it is still waiting in the session. We only
+    detach this one object. The clients already loaded for the page stay
+    attached, so their names can still be read.
+    """
+    if object_session(alert) is not db:
+        return
+    try:
+        db.expunge(alert)
+    except Exception:
+        logger.warning("Could not detach a triage alert that failed to save.")
+
+
+async def _save_new_alerts(
+    db: AsyncSession,
+    new_rows: List[Dict[str, Any]],
+    drafts: List[str],
+    existing: Dict[Tuple[int, str], TriageAlert],
+) -> None:
+    """Saves each new alert, and keeps the saved one if another load got there first.
+
+    Two page loads can try to record the same alert at the same moment. The
+    database allows only one row for that client and cause. Each insert sits
+    inside a nested save, which is a bookmark in the current database save.
+    If this load loses, the database returns to that bookmark and only the
+    new row is thrown away. The clients already loaded for this page stay
+    usable. This function then reads the alert that won and continues.
+
+    Maintainers: keep the insert inside begin_nested. Do not call
+    session.rollback() here. A full rollback forgets those loaded clients,
+    and the next read of a client's name fails.
+    """
+    for row, draft in zip(new_rows, drafts):
+        key = (row["client"].id, _alert_key(row))
+        alert = TriageAlert(client_id=key[0], alert_key=key[1], draft_message=draft)
+        try:
+            async with db.begin_nested():
+                db.add(alert)
+                await db.flush()
+            existing[key] = alert
+        except IntegrityError:
+            _drop_unsaved_alert(db, alert)
+            saved = await db.execute(
+                select(TriageAlert).where(
+                    TriageAlert.client_id == key[0],
+                    TriageAlert.alert_key == key[1],
+                )
+            )
+            existing[key] = saved.scalar_one()
+
+
 async def build_triage(
     db: AsyncSession, trainer_id: int, now: Optional[datetime] = None
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Returns (triage cards needing attention, the full client roster)."""
+    """Returns (triage cards needing attention, the full client roster).
+
+    A second load that tries to save an alert the first load already saved
+    keeps that saved card. The page still returns instead of failing.
+    """
     now = now or datetime.utcnow()
     rows = await _client_rows(db, trainer_id, now)
     flagged = [row for row in rows if row["urgency"] != "routine"]
@@ -120,12 +183,8 @@ async def build_triage(
             for r in new_rows
         ]
     )
-    for row, draft in zip(new_rows, drafts):
-        alert = TriageAlert(client_id=row["client"].id, alert_key=_alert_key(row), draft_message=draft)
-        db.add(alert)
-        existing[(row["client"].id, alert.alert_key)] = alert
     if new_rows:
-        await db.flush()
+        await _save_new_alerts(db, new_rows, list(drafts), existing)
 
     cards = []
     for row in flagged:

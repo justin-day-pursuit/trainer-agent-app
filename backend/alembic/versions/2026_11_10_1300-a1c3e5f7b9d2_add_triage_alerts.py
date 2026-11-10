@@ -17,6 +17,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    """Creates the triage alert table, including a timestamp default on created_at.
+
+    A brand-new database gets that default here. A database that already
+    applied an earlier copy of this revision gets it from the next revision.
+    """
     op.create_table(
         "triage_alerts",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -24,7 +29,7 @@ def upgrade() -> None:
         sa.Column("alert_key", sa.String(length=100), nullable=False),
         sa.Column("draft_message", sa.Text(), nullable=False),
         sa.Column("dismissed_at", sa.DateTime(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(["client_id"], ["client_profiles.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("client_id", "alert_key", name="uq_triage_client_alert"),
