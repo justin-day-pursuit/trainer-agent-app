@@ -277,7 +277,7 @@ def assert_only_engine_flags(draft):
 def test_ac_s1_injured_client_held_lift_gets_one_planner_flag_after_pain(api, monkeypatch):
     """A held, pain-free squat gets one [Planner] note after the bench pain flag."""
     note = "old shoulder injury is relevant. " + ("keep the load where it is. " * 12)
-    assert len(f"[Planner] Squat: {note}") > 200
+    assert len(f"[Planner] Squat: {note}") > 320
     calls, _reply_box = install_fake_agent(
         monkeypatch,
         PlannerReview(
@@ -300,7 +300,8 @@ def test_ac_s1_injured_client_held_lift_gets_one_planner_flag_after_pain(api, mo
     assert flags[0]["message"].startswith("[Pain Reported] Bench:")
     assert flags[1]["severity"] == "warning"
     assert flags[1]["message"].startswith("[Planner] Squat: old shoulder injury is relevant")
-    assert len(flags[1]["message"]) == 200
+    assert len(flags[1]["message"]) <= 320
+    assert flags[1]["message"].endswith("keep the load where it is.")
     assert calls[0]["exercise_ids"] == ["ex_squat"]
     assert calls[0]["injuries"] == ["Left shoulder impingement (2025)"]
     assert calls[0]["pain_notes"] == ["shoulder pinched"]
@@ -556,3 +557,20 @@ def test_ac_s7_weekly_loop_and_progression_engine_pass_unchanged():
         check=True,
     )
     assert completed.stdout.strip() == ""
+
+
+def test_a_long_single_sentence_stops_on_a_whole_word():
+    """A warning with no sentence break never ends in the middle of a word."""
+    from app.services.planner_review_service import PLANNER_MESSAGE_LIMIT, _fit_planner_message
+
+    long_sentence = "[Planner] Bench: " + "shoulder impingement history " * 30
+    fitted = _fit_planner_message(long_sentence.strip())
+    assert len(fitted) <= PLANNER_MESSAGE_LIMIT
+    assert fitted.endswith("…")
+    assert fitted[:-1].split(" ")[-1] in {"shoulder", "impingement", "history"}
+
+
+def test_a_short_warning_is_left_alone():
+    from app.services.planner_review_service import _fit_planner_message
+
+    assert _fit_planner_message("[Planner] Bench: short note.") == "[Planner] Bench: short note."

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Trainer messages stay short enough to scan on the review card.
 # Change this number if the dashboard needs a longer or shorter note.
-PLANNER_MESSAGE_LIMIT = 200
+PLANNER_MESSAGE_LIMIT = 320
 
 # The audit table requires a model name. A timed-out review often has none,
 # so we fall back to the model the planner harness is built to call. Keep
@@ -128,6 +128,22 @@ def _pain_notes(drafted: Any) -> List[str]:
     return notes
 
 
+def _fit_planner_message(message: str) -> str:
+    """Keeps a warning within the limit without stopping in the middle of a word.
+
+    Prefers ending on the last whole sentence that fits. A single long sentence
+    is cut at the last whole word and marked with an ellipsis.
+    """
+    if len(message) <= PLANNER_MESSAGE_LIMIT:
+        return message
+    window = message[: PLANNER_MESSAGE_LIMIT + 1]
+    sentence_end = max(window.rfind(mark) for mark in (". ", "! ", "? "))
+    if sentence_end >= PLANNER_MESSAGE_LIMIT // 2:
+        return window[: sentence_end + 1]
+    words = message[: PLANNER_MESSAGE_LIMIT - 1].rsplit(" ", 1)[0]
+    return words.rstrip(" ,;:-") + "…"
+
+
 def _flag_parts(flag: Any) -> tuple[Optional[str], Optional[str]]:
     """Reads an exercise id and a message from one model flag.
 
@@ -198,8 +214,7 @@ def _planner_flags(review: Any, candidates: List[Dict[str, Any]]) -> List[Dict[s
         if exercise_id is None or exercise_id not in allowed or exercise_id in seen:
             continue
         message = f"[Planner] {names[exercise_id]}: {text}"
-        if len(message) > PLANNER_MESSAGE_LIMIT:
-            message = message[:PLANNER_MESSAGE_LIMIT]
+        message = _fit_planner_message(message)
         kept.append(
             {
                 "severity": "warning",
