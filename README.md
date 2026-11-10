@@ -10,9 +10,9 @@ Independent personal trainers lose hours every weekend manually rebuilding clien
 
 The **Trainer Progression App** solves manual programming fatigue through a decoupled, human-in-the-loop multi-agent architecture:
 1. **Frictionless Client Logging**: Clients dictate or text their completed sets, reps, and feedback directly on their phone using a unique session link (no tedious account creation or tiny form-tapping with sweaty hands).
-2. **Deterministic Progression Engine**: A standalone, swappable math engine calculates baseline weight changes (e.g., hit all target reps $\to +5\text{ lbs}$; missed reps $\to$ hold weight).
-3. **AI Safety & Safety Cross-Checking**: Dedicated agents review completed logs and intake profiles, cross-checking proposed progressions against past injuries or pain flags.
-4. **Trainer Decides**: The trainer reviews AI-drafted programs on a clean dashboard, reviews safety badges, and hits **Approve**—instantly pushing next week's plan to the client's phone.
+2. **Deterministic Progression Engine**: `EffortBasedProgression` drafts the weights and reps. Pain, missed reps, a missing set, a challenging effort, or no recorded effort holds the weight and the reps. An easy effort under 12 reps adds 2 reps, capped at 12. An easy effort at 12 reps adds 5 lb and resets reps to 8. An easy bodyweight lift at 12 reps holds, and the trainer decides.
+3. **Planner flags, engine numbers**: The deterministic engine drafts the weights. The Progression Planner only flags held lifts and does not change them. A draft gets a [Planner] flag only for a held, pain-free, same-weight lift. A real planner call writes one `agent_traces` row. If that write fails, the log and the draft stay.
+4. **Trainer Decides**: The trainer reviews the engine's draft and any planner flags on the dashboard and hits **Approve**, which pushes next week's plan to the client's phone.
 
 ---
 
@@ -34,8 +34,8 @@ The application is structured as a decoupled monorepo split into a **mobile-opti
 +-------------------------------------------------------------+
 |                     TRAINER DASHBOARD                       |
 |  - Protected by Supabase Auth (/trainer)                    |
-|  - Review queue for draft progressions (Progression Planner)|
-|  - AI safety alerts & triage feed (Trainer Assistant)       |
+|  - Review queue: engine drafts weights; planner flags holds|
+|  - Triage feed planned for Wave 3 (not on the dashboard yet)|
 |  - 1-click plan approval (Human-in-the-Loop)                |
 +------------------------------+------------------------------+
                                |
@@ -74,8 +74,8 @@ The application is structured as a decoupled monorepo split into a **mobile-opti
 | Agent | Model | Responsibility | Trigger | Permissions & Safeguards |
 | :--- | :--- | :--- | :--- | :--- |
 | **Workout Logger** | `claude-sonnet-5-5` (Front-Facing) | Converses with clients during intake; parses conversational chat/voice logs into structured set rows (`exercise_id`, `weight_lbs`, `reps`, `pain_flag`). | On-demand (client sends a message or submits a workout note). | **Read**: Client profile & prescribed workout.<br>**Write**: Extracted sets, pain notes, intake data.<br>**Safeguard**: Never changes workout plans; inline confirmation allows client 1-tap edits. |
-| **Progression Planner** | `claude-haiku-5-5` (Backend Safety) | Reads deterministic progression engine output, cross-references client injury profile and recent pain flags, and drafts next week's personalized program. Fast and cost-effective since progression is computed deterministically in Python. | Scheduled / Trainer-initiated weekend batch. | **Read**: Completed logs, progression engine output, injury history.<br>**Write**: Draft workout plans to trainer review queue.<br>**Safeguard**: Read-only; never communicates directly with clients; requires trainer approval. |
-| **Trainer Assistant** | `claude-sonnet-5-5` (Front-Facing) | Monitors client adherence, detects missed workouts or declining engagement, prepares triage alert cards, and drafts empathetic, personalized check-in messages. | Scheduled daily / Trainer dashboard query. | **Read**: All client profiles, logs, and historical trends.<br>**Write**: Alert records and draft messages to trainer dashboard.<br>**Safeguard**: Cannot send messages or edit plans without explicit trainer approval. |
+| **Progression Planner** | `claude-haiku-5-5` (Backend Safety) | Reviews held lifts. It does not change weights. Drafting appends a [Planner] flag only for a held, pain-free, same-weight lift. The engine still sets the numbers. A real planner call writes one `agent_traces` row. A failed write does not drop the log or the draft. | Scheduled / Trainer-initiated weekend batch. | **Read**: Completed logs, the engine draft, injury history.<br>**Write**: A [Planner] flag on the engine's draft, and one `agent_traces` audit row when the model is actually called.<br>**Safeguard**: Never changes weights or reps. Never messages the client. The trainer approves the draft. |
+| **Trainer Assistant** | `claude-sonnet-5-5` (Front-Facing) | Planned for Wave 3. Will monitor adherence, detect missed workouts, and draft check-in messages. The triage feed is not on the dashboard today. | Scheduled daily / Trainer dashboard query, once Wave 3 lands. | **Read**: Client profiles, logs, and history, when built.<br>**Write**: Alert records and draft messages, only after trainer approval.<br>**Safeguard**: Cannot send messages or edit plans without explicit trainer approval. |
 
 ---
 
