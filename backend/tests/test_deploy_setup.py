@@ -89,6 +89,7 @@ def test_dockerignore_excludes_env_virtualenv_and_caches(_acceptance_case):
 def test_render_blueprint_has_safe_health_and_environment_contract(_acceptance_case):
     """Checks the Blueprint's public settings without needing a Render account."""
     render_yaml = _read("render.yaml")
+    assert "plan: free" in render_yaml
     assert "dockerContext: ./backend" in render_yaml
     assert "healthCheckPath: /health" in render_yaml
     assert "preDeployCommand: alembic upgrade head" in render_yaml

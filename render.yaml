@@ -3,6 +3,10 @@
 services:
   - type: web
     name: trainer-progression-api
+    # Free is 0.1 CPU and 512 MB. The service sleeps after 15 minutes without
+    # traffic and wakes on the next request. Change this only if Justin asks
+    # for a paid instance.
+    plan: free
     runtime: docker
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile

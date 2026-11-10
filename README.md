@@ -170,7 +170,10 @@ Frontend will be live at `http://localhost:3000`.
 
 #### Render backend
 1. Create a Render Blueprint from the repository's `render.yaml`. The service uses
-   `backend` as its Docker context and checks `GET /health`.
+   the Free instance (`plan: free`), `backend` as its Docker context, and checks
+   `GET /health`. Free services sleep after 15 minutes without traffic and take
+   about a minute to wake. If a service was already created on a paid plan, switch
+   its instance type to Free in the Render dashboard.
 2. Add these secret or environment-specific names in the Render dashboard:
    `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
    `SUPABASE_JWT_SECRET`, `ANTHROPIC_API_KEY`, `CORS_ORIGINS`, `ENVIRONMENT`,
