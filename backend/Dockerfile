@@ -12,8 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy packaging configuration and install dependencies
-COPY pyproject.toml .
+# Copy package metadata together because pyproject.toml references README.md.
+# Keep application code and environment files out of this dependency-only layer.
+COPY pyproject.toml README.md ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir .
 
@@ -38,5 +39,5 @@ USER appuser
 
 EXPOSE 8000
 
-# Start Uvicorn production server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render supplies PORT at runtime; local containers keep the familiar 8000 default.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

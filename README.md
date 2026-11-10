@@ -166,7 +166,32 @@ Frontend will be live at `http://localhost:3000`.
 
 ---
 
-### 5. Running with Docker Compose (Optional Local DB)
+### 5. Production Deployment
+
+#### Render backend
+1. Create a Render Blueprint from the repository's `render.yaml`. The service uses
+   `backend` as its Docker context and checks `GET /health`.
+2. Add these secret or environment-specific names in the Render dashboard:
+   `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+   `SUPABASE_JWT_SECRET`, `ANTHROPIC_API_KEY`, `CORS_ORIGINS`, `ENVIRONMENT`,
+   and `DEBUG`. Render supplies `PORT`; do not add credentials to the repository.
+3. Keep the pre-deploy command as `alembic upgrade head`. Migrations require
+   `DIRECT_URL`, and production deployment does not run a seed.
+
+#### Vercel frontend
+1. Import the repository into Vercel and set the Root Directory to `frontend`.
+2. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and
+   `NEXT_PUBLIC_API_URL` in Vercel project settings. `NEXT_PUBLIC_API_URL` must
+   point to the Render service and end in `/api/v1`.
+3. Deploy the frontend. After its Vercel origin exists, set Render's
+   `CORS_ORIGINS` to that exact origin: scheme and host only, with no path.
+4. Confirm the Render `/health` endpoint and the Vercel site before production use.
+
+No production values belong in this README or either committed environment example.
+
+---
+
+### 6. Running with Docker Compose (Optional Local DB)
 If you prefer running a local PostgreSQL instance:
 ```bash
 cd backend
