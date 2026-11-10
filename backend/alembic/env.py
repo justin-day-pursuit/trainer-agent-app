@@ -7,6 +7,14 @@ configuration so database migrations can be generated and applied automatically.
 
 import asyncio
 from logging.config import fileConfig
+from pathlib import Path
+import sys
+
+# Ensure the backend directory is in sys.path so 'app' can always be imported
+# when Alembic is invoked directly via CLI or container entrypoints.
+backend_root = str(Path(__file__).resolve().parents[1])
+if backend_root not in sys.path:
+    sys.path.insert(0, backend_root)
 
 from alembic import context
 from sqlalchemy import pool

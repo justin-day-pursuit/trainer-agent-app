@@ -35,6 +35,9 @@ COPY app/ app/
 COPY alembic.ini .
 COPY alembic/ alembic/
 
+# Ensure Python discovers local application modules in /app
+ENV PYTHONPATH=/app
+
 USER appuser
 
 EXPOSE 8000
@@ -43,4 +46,4 @@ EXPOSE 8000
 # On Render's free tier, pre-deploy commands are disallowed by the platform.
 # To ensure database tables and revisions stay current without manual intervention,
 # Alembic runs migrations first; once complete, uvicorn starts the FastAPI application.
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "PYTHONPATH=/app alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
