@@ -3,15 +3,16 @@
 services:
   - type: web
     name: trainer-progression-api
-    # Free is 0.1 CPU and 512 MB. The service sleeps after 15 minutes without
-    # traffic and wakes on the next request. Change this only if Justin asks
-    # for a paid instance.
+    # Free tier allocation (0.1 CPU, 512 MB). Free web services spin down after
+    # 15 minutes of inactivity and take ~60 seconds to restart upon incoming traffic.
+    # Render's free tier does not support 'preDeployCommand'. To keep database migrations
+    # automated on deploy without a paid instance, migrations run at container startup
+    # in the Dockerfile before the uvicorn web server binds to the port.
     plan: free
     runtime: docker
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /health
-    preDeployCommand: alembic upgrade head
     envVars:
       - key: DATABASE_URL
         sync: false

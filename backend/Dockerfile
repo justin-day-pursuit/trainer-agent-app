@@ -39,5 +39,8 @@ USER appuser
 
 EXPOSE 8000
 
-# Render supplies PORT at runtime; local containers keep the familiar 8000 default.
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Render supplies PORT dynamically at runtime; local development defaults to port 8000.
+# On Render's free tier, pre-deploy commands are disallowed by the platform.
+# To ensure database tables and revisions stay current without manual intervention,
+# Alembic runs migrations first; once complete, uvicorn starts the FastAPI application.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

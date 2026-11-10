@@ -70,6 +70,7 @@ def test_dockerfile_uses_render_port_with_8000_fallback(_acceptance_case):
         "pip install --no-cache-dir ."
     )
     assert "${PORT:-8000}" in dockerfile
+    assert "alembic upgrade head" in dockerfile
     assert "USER appuser" in dockerfile
     assert "COPY .env" not in dockerfile
 
@@ -92,7 +93,8 @@ def test_render_blueprint_has_safe_health_and_environment_contract(_acceptance_c
     assert "plan: free" in render_yaml
     assert "dockerContext: ./backend" in render_yaml
     assert "healthCheckPath: /health" in render_yaml
-    assert "preDeployCommand: alembic upgrade head" in render_yaml
+    # Render's free tier does not support preDeployCommand.
+    assert re.search(r"^\s+preDeployCommand\s*:", render_yaml, flags=re.MULTILINE) is None
     assert render_yaml.count("sync: false") == 9
     assert re.search(r"^\s+value\s*:", render_yaml, flags=re.MULTILINE) is None
 

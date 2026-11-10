@@ -178,8 +178,9 @@ Frontend will be live at `http://localhost:3000`.
    `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
    `SUPABASE_JWT_SECRET`, `ANTHROPIC_API_KEY`, `CORS_ORIGINS`, `ENVIRONMENT`,
    and `DEBUG`. Render supplies `PORT`; do not add credentials to the repository.
-3. Keep the pre-deploy command as `alembic upgrade head`. Migrations require
-   `DIRECT_URL`, and production deployment does not run a seed.
+3. Render's Free tier does not support pre-deploy commands, so database migrations
+   (`alembic upgrade head`) execute at container startup before uvicorn begins
+   serving requests. Migrations require `DIRECT_URL`, and production deployment does not run a seed.
 
 #### Vercel frontend
 1. Import the repository into Vercel and set the Root Directory to `frontend`.
