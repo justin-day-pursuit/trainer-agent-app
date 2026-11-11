@@ -14,6 +14,7 @@ This directory contains the presentation deck materials for the Trainer Progress
 | **Broken-Up Slides (PNG)** | `presentation/deck-slides/slide-01.png` – `slide-10.png` | Crisp 1920×1080 16:9 high-resolution images ready to drop into any presentation software. |
 | **Original Deck** | `presentation/deck.pdf` | Original 10-page master PDF. |
 | **Diagrams** | `presentation/diagrams/` | Standalone high-resolution PNG, PDF, and HTML source for the system architecture and agent workflow loop diagrams. |
+| **Promo Video** | `presentation/promo-video.mp4` | 1:29 opener with music, built from captured app screens (sample data). The live-site demo is recorded separately in Loom. |
 
 ---
 
