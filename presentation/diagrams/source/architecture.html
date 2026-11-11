@@ -1,0 +1,107 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400..700&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;box-sizing:border-box}
+body{width:1920px;height:1080px;background:#F5F3EC;color:#15211D;font-family:'Public Sans',Arial,sans-serif;position:relative;overflow:hidden}
+h1{font-family:'Oswald',Arial,sans-serif;font-weight:600;font-size:60px;line-height:1.1;position:absolute;left:96px;top:56px}
+.sub{position:absolute;left:96px;top:134px;font-size:26px;color:#46524D}
+.box{position:absolute;border-radius:16px;padding:22px 26px}
+.light{background:#E7E3D7}
+.dark{background:#15211D;color:#F5F3EC}
+.tag{font-size:18px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.t{font-size:28px;font-weight:700;line-height:1.2}
+.d{font-size:21px;line-height:1.35;margin-top:6px}
+.agent{border:2px dashed #FF8F66;border-radius:12px;padding:16px 18px;position:absolute;background:#1D2B26}
+.agent .t{font-size:25px}
+.agent .d{color:#D9DED8;font-size:19px}
+.ai{color:#9FD3C7}
+.code{color:#FFB38A}
+.boundary{position:absolute;border:3px dashed #B93C0B;border-radius:22px}
+.blabel{position:absolute;background:#F5F3EC;color:#B93C0B;font-weight:700;font-size:20px;padding:0 10px;letter-spacing:.5px}
+.hitl{display:inline-block;background:#B93C0B;color:#fff;font-size:16px;font-weight:700;border-radius:999px;padding:3px 10px;margin-top:8px;letter-spacing:.5px}
+svg#wires{position:absolute;inset:0;pointer-events:none}
+.legend{position:absolute;left:96px;bottom:40px;font-size:20px;color:#46524D;display:flex;gap:32px;align-items:center}
+.sw{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:-2px;margin-right:8px}
+</style></head><body>
+<h1>Architecture: AI reads, code decides the numbers</h1>
+<p class="sub">Trainer Progression App · live at trainer-agent-app.vercel.app</p>
+
+<!-- People -->
+<div class="box dark" id="client" style="left:96px;top:210px;width:330px">
+  <div class="tag code">Person</div><div class="t">Client on phone</div>
+  <div class="d" style="color:#D9DED8">Private link, no account. Types or says the workout.</div>
+</div>
+<div class="box dark" id="trainer" style="left:96px;top:700px;width:330px">
+  <div class="tag code">Person</div><div class="t">Trainer on laptop</div>
+  <div class="d" style="color:#D9DED8">Signs in with Supabase. Reviews and approves.</div>
+</div>
+
+<!-- Frontend -->
+<div class="box light" id="fe" style="left:510px;top:380px;width:330px">
+  <div class="tag" style="color:#46524D">Frontend · Vercel</div><div class="t">Next.js app</div>
+  <div class="d" style="color:#46524D">/s/:token: client logging<br>/trainer: dashboard, triage, roster</div>
+</div>
+
+<!-- Backend -->
+<div class="box dark" id="be" style="left:930px;top:200px;width:880px;height:640px">
+  <div class="tag code">Backend · Render</div><div class="t">FastAPI</div>
+  <div class="d" style="color:#D9DED8">Every request checked: trainer sign-in (Supabase token) or the client's private link. Trainers only see their own clients.</div>
+</div>
+<div class="blabel" style="left:990px;top:368px;background:#15211D;color:#FF8F66;padding:0">Dashed = AI. It reads and drafts only: no data writes, no sending.</div>
+
+<div class="agent" id="logger" style="left:990px;top:420px;width:370px">
+  <div class="tag ai">AI · Claude Sonnet 5.5</div><div class="t" style="color:#F5F3EC">Workout Logger</div>
+  <div class="d">Turns the client's message into sets, effort, and pain. Saves nothing.</div>
+</div>
+<div class="agent" id="engine" style="left:1390px;top:420px;width:370px;border:2px solid #FFB38A;background:#2B3A33">
+  <div class="tag code">Code · Python</div><div class="t" style="color:#FFB38A">Progression Engine</div>
+  <div class="d">The only source of weights and reps. Reps up to 12, then +5 lbs. Pain or hard: hold.</div>
+</div>
+<div class="agent" id="planner" style="left:990px;top:640px;width:370px">
+  <div class="tag ai">AI · Claude Haiku 5.5</div><div class="t" style="color:#F5F3EC">Progression Planner</div>
+  <div class="d">Checks injury notes on held lifts. Can flag, can't change a number.</div>
+</div>
+<div class="agent" id="assistant" style="left:1390px;top:640px;width:370px">
+  <div class="tag ai">AI · Claude Sonnet 5.5</div><div class="t" style="color:#F5F3EC">Trainer Assistant</div>
+  <div class="d">Drafts check-ins. Code decides who's urgent. Never sends.</div>
+</div>
+
+<!-- Data + external -->
+<div class="box light" id="db" style="left:930px;top:890px;width:600px">
+  <div class="tag" style="color:#46524D">Supabase · PostgreSQL + Auth</div>
+  <div class="d" style="margin-top:2px;color:#15211D">clients · links · workout logs · plans (draft → approved → archived) · triage alerts · agent traces</div>
+</div>
+<div class="box light" id="anthropic" style="left:1560px;top:890px;width:250px">
+  <div class="tag" style="color:#46524D">External</div>
+  <div class="t" style="font-size:24px">Anthropic API</div>
+</div>
+
+<svg id="wires" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><marker id="ah" markerWidth="16" markerHeight="16" refX="13" refY="8" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L16,8 L0,16 z" fill="#46524D"/></marker>
+<marker id="ahl" markerWidth="16" markerHeight="16" refX="13" refY="8" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L16,8 L0,16 z" fill="#9FD3C7"/></marker><marker id="ahw" markerWidth="16" markerHeight="16" refX="13" refY="8" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L16,8 L0,16 z" fill="#D9DED8"/></marker></defs></svg>
+
+<div class="legend"><span><span class="sw" style="background:#15211D"></span>People and services</span><span><span class="sw" style="background:#9FD3C7"></span>AI (reads and drafts)</span><span><span class="sw" style="background:#FFB38A"></span>Code (decides numbers)</span><span><span class="sw" style="border:2px dashed #FF8F66"></span>AI agent: no write access</span></div>
+
+<script>
+const R=id=>document.getElementById(id).getBoundingClientRect();
+const svg=document.getElementById('wires');
+function line(x1,y1,x2,y2,opts={}){const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+ const mx=(x1+x2)/2; p.setAttribute('d',opts.straight?`M${x1},${y1} L${x2},${y2}`:`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+ p.setAttribute('stroke',opts.color||'#46524D');p.setAttribute('stroke-width',opts.w||3);p.setAttribute('fill','none');
+ if(opts.dash)p.setAttribute('stroke-dasharray',opts.dash); p.setAttribute('marker-end',opts.color==='#9FD3C7'?'url(#ahl)':opts.color==='#D9DED8'?'url(#ahw)':'url(#ah)'); svg.appendChild(p);
+ if(opts.both){const q=p.cloneNode();q.setAttribute('d',p.getAttribute('d'));q.removeAttribute('marker-end');q.setAttribute('marker-start','url(#ah)');}
+}
+function label(x,y,text){const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('font-size','18');t.setAttribute('fill','#46524D');t.setAttribute('font-family','Public Sans');t.textContent=text;svg.appendChild(t);}
+const c=R('client'),tr=R('trainer'),fe=R('fe'),be=R('be'),db=R('db'),an=R('anthropic'),lg=R('logger'),pl=R('planner'),as=R('assistant'),en=R('engine');
+line(c.right,c.top+c.height/2,fe.left,fe.top+40);
+line(tr.right,tr.top+tr.height/2,fe.left,fe.bottom-40);
+label(c.right+20,c.top+c.height/2-14,'HTTPS');
+line(fe.right,fe.top+fe.height/2,be.left,fe.top+fe.height/2,{straight:true});
+label(fe.right+6,fe.top+fe.height/2-16,'REST');
+line(be.left+300,be.bottom,db.left+300,db.top,{straight:true});
+label(be.left+320,be.bottom+22,'only code writes');
+line(an.left+an.width/2,an.top,an.left+an.width/2,be.bottom,{straight:true,color:'#9FD3C7',dash:'8 6'});
+line(lg.right,lg.top+lg.height/2,en.left,en.top+en.height/2,{straight:true,color:'#D9DED8'});
+line(en.left+40,en.bottom,pl.right-40,pl.top,{straight:true,color:'#D9DED8'});
+</script>
+</body></html>
