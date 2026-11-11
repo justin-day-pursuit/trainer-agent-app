@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trainer Progression App — Presentation Deck</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d30;
+      --accent: #3b82f6;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #22304d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top control bar */
+    header {
+      height: 52px;
+      padding: 0 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .deck-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      background: #1e293b;
+      color: var(--text);
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    button:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 65px;
+      text-align: center;
+    }
+
+    /* Main presentation area */
+    main {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .slide-frame {
+      position: relative;
+      width: 100%;
+      max-width: 1600px;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* Navigation Overlay Arrows */
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: white;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.2s, background 0.2s;
+      opacity: 0.4;
+      z-index: 10;
+    }
+
+    .nav-arrow:hover {
+      opacity: 1;
+      background: rgba(30, 41, 59, 0.9);
+    }
+
+    .nav-prev { left: 30px; }
+    .nav-next { right: 30px; }
+
+    /* Presenter Notes Drawer */
+    .notes-drawer {
+      width: 380px;
+      background: var(--card-bg);
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 15;
+    }
+
+    .notes-drawer.open {
+      display: flex;
+    }
+
+    .notes-header {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #60a5fa;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .notes-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .notes-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      white-space: pre-line;
+    }
+
+    /* Thumbnail Drawer */
+    .thumbnails-drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 140px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      display: none;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      overflow-x: auto;
+      z-index: 25;
+    }
+
+    .thumbnails-drawer.open {
+      display: flex;
+    }
+
+    .thumb-item {
+      flex: 0 0 160px;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      opacity: 0.6;
+      transition: opacity 0.15s, border-color 0.15s, transform 0.15s;
+    }
+
+    .thumb-item:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .thumb-item.active {
+      opacity: 1;
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .thumb-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Bottom progress bar */
+    .progress-bar-container {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      width: 100%;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 10%;
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-group">
+      <span class="badge">Presentation</span>
+      <span class="deck-title">Trainer Progression App — 10 Slide Deck</span>
+    </div>
+
+    <div class="controls">
+      <button id="btn-prev" title="Previous Slide (← / PageUp)">← Prev</button>
+      <span id="slide-num" class="slide-counter">1 / 10</span>
+      <button id="btn-next" title="Next Slide (→ / Space / PageDown)">Next →</button>
+      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
+      <button id="btn-thumbs" title="Toggle Slide Thumbnails (T)">Thumbnails</button>
+      <button id="btn-notes" title="Toggle Presenter Notes (N)">Notes</button>
+      <button id="btn-fullscreen" title="Full Screen (F)">Full Screen</button>
+    </div>
+  </header>
+
+  <div class="progress-bar-container">
+    <div id="progress-bar" class="progress-bar-fill"></div>
+  </div>
+
+  <main>
+    <div class="stage-container">
+      <button class="nav-arrow nav-prev" id="arrow-prev" title="Previous slide">❮</button>
+
+      <div class="slide-frame">
+        <img id="current-slide-img" class="slide-img" src="deck-slides/slide-01.png" alt="Slide 1">
+      </div>
+
+      <button class="nav-arrow nav-next" id="arrow-next" title="Next slide">❯</button>
+    </div>
+
+    <aside id="notes-drawer" class="notes-drawer">
+      <div class="notes-header">Presenter Notes</div>
+      <div id="notes-title" class="notes-title">Slide Title</div>
+      <div id="notes-body" class="notes-body">Notes content...</div>
+    </aside>
+
+    <div id="thumbnails-drawer" class="thumbnails-drawer"></div>
+  </main>
+
+  <script>
+    const slides = [
+      {
+        num: 1,
+        title: "FINAL PROJECT: Trainer Progression App",
+        img: "deck-slides/slide-01.png",
+        pdf: "deck-slides/slide-01.pdf",
+        notes: `Next week's workouts drafted from last week's logs. The trainer approves every one.\n\nPresenters: Yadan Taino and Justin Day\n\nPursuit L2 AI-Native Builder presentation.`
+      },
+      {
+        num: 2,
+        title: "Who we are",
+        img: "deck-slides/slide-02.png",
+        pdf: "deck-slides/slide-02.pdf",
+        notes: `Pursuit L2 AI-Native builders\n\n• Client Side and Design: Yadan Taino\nBuilt what clients and trainers touch: chat and voice logging, the Workout Logger agent, progression rules, Trainer Assistant check-ins, and UI design.\n\n• Backend and Deployment: Justin Day\nBuilt the engine room: API, database, Progression Planner agent, trainer auth, and live deployment on Render and Vercel.`
+      },
+      {
+        num: 3,
+        title: "The job: personal trainer",
+        img: "deck-slides/slide-03.png",
+        pdf: "deck-slides/slide-03.pdf",
+        notes: `Why we chose it: a trainer we know rebuilds every client's program by hand each week.\n\nOf the four core duties, two repeat weekly for every client:\n1. Assess abilities and goals\n2. Create and adjust programs [Our focus]\n3. Monitor client progress [Our focus]\n4. Teach technique and safety\n\nSources: O*NET 39-9031.00; U.S. BLS.`
+      },
+      {
+        num: 4,
+        title: "The pain points: slow, repetitive, easy to miss",
+        img: "deck-slides/slide-04.png",
+        pdf: "deck-slides/slide-04.pdf",
+        notes: `• SLOW: Rebuilding every program, every week in Google Sheets lift by lift.\n• REPETITIVE: Reps go up to 12, then weight once easy. The same rule applied by hand for every lift and client.\n• EASY TO MISS: Pain mentioned in a text slips by, and inactive clients quietly drift away.\n\nMarket research: Trainers using Trainerize report the same manual editing; its AI only builds single workouts, not multi-week programs.`
+      },
+      {
+        num: 5,
+        title: "What we made easier, and how",
+        img: "deck-slides/slide-05.png",
+        pdf: "deck-slides/slide-05.pdf",
+        notes: `Today vs With our app:\n• Clients open spreadsheets -> Clients log by chat or voice with no account\n• Trainer copies last week -> Next week is drafted from reps and effort\n• Manual weight adjustments -> Trainer reviews changes and reasons\n• Pain easily missed -> Pain is flagged and that lift held\n• Client drifting unnoticed -> Trainer sees who needs check-in, message drafted\n\nTarget: plan at least 50% faster than in Sheets.`
+      },
+      {
+        num: 6,
+        title: "Architecture: AI reads, code decides the numbers",
+        img: "deck-slides/slide-06.png",
+        pdf: "deck-slides/slide-06.pdf",
+        notes: `Frontends:\n• Client on phone: Next.js on Vercel, private link, no login\n• Trainer dashboard: Next.js on Vercel, Supabase login\n\nFastAPI backend on Render:\n• Workout Logger (Sonnet 5.5): turns chat into sets\n• Progression Engine (Python Code): ONLY source of weights and reps\n• Progression Planner (Haiku 5.5): flags safety conflicts\n• Trainer Assistant (Sonnet 5.5): drafts check-ins\n\nSupabase: PostgreSQL and trainer auth.`
+      },
+      {
+        num: 7,
+        title: "Agent Workflow Loop: The Complete Cycle",
+        img: "deck-slides/slide-07.png",
+        pdf: "deck-slides/slide-07.pdf",
+        notes: `The full agentic flow as a closed loop:\n1. Client logs workout\n2. Workout Logger (AI) extracts sets and pain flags\n3. Client reviews and confirms sets before submitting\n4. Progression Engine (deterministic code) calculates next week's weights and reps\n5. Progression Planner (AI) checks against client injury history and recent pain\n6. Trainer reviews staged draft on dashboard and approves or modifies\n7. Client receives updated plan\n\nPlus the Trainer Assistant check-in loop for inactive clients.`
+      },
+      {
+        num: 8,
+        title: "How one workout moves through",
+        img: "deck-slides/slide-08.png",
+        pdf: "deck-slides/slide-08.pdf",
+        notes: `1. Client logs: 'Bench 135, last set only 8, shoulder pinched'\n2. Workout Logger extracts sets and pain flag (saves nothing)\n3. Client confirms and rates effort (only this is saved)\n4. Progression Engine drafts next week (easy reps rise; hard/missed/pain held)\n5. Progression Planner checks injuries (flags safety, never alters numbers)\n6. Trainer reviews client's words and approves before client sees it.`
+      },
+      {
+        num: 9,
+        title: "What we built: the whole loop, live",
+        img: "deck-slides/slide-09.png",
+        pdf: "deck-slides/slide-09.pdf",
+        notes: `Screenshots from the live production app:\n1. Client checks sets (Workout logging flow)\n2. Sent to the trainer (Confirmation screen)\n3. Trainer approves (Reviewing client's words; knee pain held the squat)\n4. Check-ins drafted (Trainer Assistant feed for clients needing attention).`
+      },
+      {
+        num: 10,
+        title: "Where it stands: live and tested end to end",
+        img: "deck-slides/slide-10.png",
+        pdf: "deck-slides/slide-10.pdf",
+        notes: `Production URL: https://trainer-agent-app.vercel.app\n\nDelivery status:\n• Client logging by chat or voice: Done\n• Progression engine and trainer approval: Done\n• Trainer Assistant check-ins and roster: Done\n• Live on Vercel and Render: Live\n\nFinal live test: 9 of 10 checks passed on production.\n\nNext steps: AI call audit log, client link revocation, mobile testing, and timing test with our partner trainer.`
+      }
+    ];
+
+    let currentIndex = 0;
+    const total = slides.length;
+
+    const imgEl = document.getElementById("current-slide-img");
+    const counterEl = document.getElementById("slide-num");
+    const progressEl = document.getElementById("progress-bar");
+    const notesTitleEl = document.getElementById("notes-title");
+    const notesBodyEl = document.getElementById("notes-body");
+    const notesDrawer = document.getElementById("notes-drawer");
+    const thumbsDrawer = document.getElementById("thumbnails-drawer");
+
+    // Initialize thumbnails
+    slides.forEach((s, idx) => {
+      const thumb = document.createElement("div");
+      thumb.className = `thumb-item ${idx === 0 ? "active" : ""}`;
+      thumb.innerHTML = `<img src="${s.img}" alt="Slide ${s.num}">`;
+      thumb.addEventListener("click", () => goToSlide(idx));
+      thumbsDrawer.appendChild(thumb);
+    });
+
+    function updateSlide() {
+      const s = slides[currentIndex];
+      imgEl.src = s.img;
+      imgEl.alt = `Slide ${s.num}: ${s.title}`;
+      counterEl.textContent = `${s.num} / ${total}`;
+      progressEl.style.width = `${((currentIndex + 1) / total) * 100}%`;
+      notesTitleEl.textContent = `Slide ${s.num}: ${s.title}`;
+      notesBodyEl.textContent = s.notes;
+
+      // Update thumbnails active state
+      const thumbItems = thumbsDrawer.querySelectorAll(".thumb-item");
+      thumbItems.forEach((el, idx) => {
+        el.classList.toggle("active", idx === currentIndex);
+      });
+    }
+
+    function nextSlide() {
+      if (currentIndex < total - 1) {
+        currentIndex++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(idx) {
+      if (idx >= 0 && idx < total) {
+        currentIndex = idx;
+        updateSlide();
+      }
+    }
+
+    // Button event listeners
+    document.getElementById("btn-next").addEventListener("click", nextSlide);
+    document.getElementById("btn-prev").addEventListener("click", prevSlide);
+    document.getElementById("arrow-next").addEventListener("click", nextSlide);
+    document.getElementById("arrow-prev").addEventListener("click", prevSlide);
+
+    const btnNotes = document.getElementById("btn-notes");
+    btnNotes.addEventListener("click", () => {
+      notesDrawer.classList.toggle("open");
+      btnNotes.classList.toggle("active");
+    });
+
+    const btnThumbs = document.getElementById("btn-thumbs");
+    btnThumbs.addEventListener("click", () => {
+      thumbsDrawer.classList.toggle("open");
+      btnThumbs.classList.toggle("active");
+    });
+
+    document.getElementById("btn-fullscreen").addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Keyboard navigation
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        goToSlide(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        goToSlide(total - 1);
+      } else if (e.key.toLowerCase() === "n") {
+        notesDrawer.classList.toggle("open");
+        btnNotes.classList.toggle("active");
+      } else if (e.key.toLowerCase() === "t") {
+        thumbsDrawer.classList.toggle("open");
+        btnThumbs.classList.toggle("active");
+      } else if (e.key.toLowerCase() === "f") {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>
