@@ -488,7 +488,7 @@ Checked items match the shipped engine and planner. Wave 3 has shipped. Wave 4 i
 
 ### Wave 4: Security Hardening & Production Deployment
 
-**Status**: Not done.
+**Status**: Deployed and Gate 4 run (2026-11-11). Still open: Task 4.1 traces for the Workout Logger and Trainer Assistant plus `GET /trainer/traces`; Task 4.2 a revoke endpoint and narrowing CORS from any `*.vercel.app` to this app; Task 4.4 a check on a physical iPhone and Android phone.
 
 **Objective**: Harden system security, pass full end-to-end test suite, and deploy frontend to Vercel and backend to Render.
 
@@ -528,17 +528,17 @@ Live hosts:
 - Render API: https://trainer-progression-api.onrender.com
 - Vercel app: https://trainer-agent-app.vercel.app/
 
-- [ ] Complete live E2E test on production URLs:
-  1. Trainer logs in via Supabase Auth.
-  2. Trainer creates client profile for "Elena Rostova" and copies generated session link (real UUID).
-  3. Client opens session link on mobile phone.
-  4. Client dictates workout: *"Squats 185 for 3 sets of 8, felt great. Bench press 115 3 sets of 10 but left wrist was aching."*
-  5. The Workout Logger parses sets, flags wrist pain. Client sees loading spinner with model name, then confirmation card.
-  6. Client confirms and saves log; `localStorage` clears; duplicate submit returns 409.
-  7. Trainer triggers `plan-next-week`. `EffortBasedProgression` writes the next week's targets. Wrist pain holds bench weight and reps. The planner flags only a held, pain-free, same-weight lift. It does not change weights.
-  8. Trainer reviews the draft on the dashboard, reads the engine's hold reason, and clicks "Approve" (prior plan archived). Wave 4 is not done.
-  9. Client refreshes session page and sees updated week with trainer's approved program.
-  10. Audit trace confirmed in `agent_traces`.
+- [x] Complete live E2E test on production URLs: **run 2026-11-11** (test client "Elena Rostova"). 9 of 10 steps pass; step 10 is partial.
+  1. ✅ Trainer logs in via Supabase Auth.
+  2. ✅ Trainer creates client profile for "Elena Rostova"; the generated link is a real UUID on the Vercel host. The Copy button could not be checked in the automated browser, which blocks the clipboard. Check it by hand.
+  3. ✅ Client opens session link at phone size; it loads without sign-in. Not yet tried on a physical phone.
+  4. ✅ Client enters: *"Squats 185 for 3 sets of 8, felt great. Bench press 115 3 sets of 10 but left wrist was aching."* (typed; dictation is blocked in the automated browser).
+  5. ✅ The Workout Logger parses all 6 sets and flags wrist pain on bench. The "Reading your workout" card names the model, then the Check card appears.
+  6. ✅ Client sends the log; `localStorage` clears; resending the same request ID returns 409.
+  7. ✅ The draft is created on send. Squat (easy, 8 reps) goes to 3×10 @ 185. Wrist pain holds bench at 3×10 @ 115 even though it was rated easy. The planner changes no weights and adds no flag (no held, pain-free lift).
+  8. ✅ Trainer reviews the draft (with "In their words") and approves. Week 1 is archived, Week 2 approved.
+  9. ✅ Client's link shows Week 2 - Progression with the approved targets.
+  10. ⚠️ Partial: `agent_traces` gets a ProgressionPlanner row, but the Workout Logger and Trainer Assistant write none (Task 4.1).
 
 ---
 
