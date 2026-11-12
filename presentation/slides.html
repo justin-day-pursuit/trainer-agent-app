@@ -137,12 +137,29 @@
       justify-content: center;
     }
 
-    .slide-img {
+    .slide-img,
+    .slide-video {
       width: 100%;
       height: 100%;
       object-fit: contain;
+      background: #000;
       user-select: none;
       -webkit-user-drag: none;
+    }
+
+    .slide-video,
+    .slide-embed {
+      display: none;
+    }
+
+    /* The Loom player fills the slide. It stays hidden until slide 9. */
+    .slide-embed {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
     }
 
     /* Navigation Overlay Arrows */
@@ -308,6 +325,8 @@
 
       <div class="slide-frame">
         <img id="current-slide-img" class="slide-img" src="deck-slides/slide-01.png" alt="Slide 1">
+        <video id="current-slide-video" class="slide-video" controls playsinline preload="metadata"></video>
+        <iframe id="current-slide-embed" class="slide-embed" title="Walkthrough video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
       </div>
 
       <button class="nav-arrow nav-next" id="arrow-next" title="Next slide">❯</button>
@@ -383,9 +402,10 @@
       {
         num: 9,
         title: "What we built: the whole loop, live",
-        img: "deck-slides/slide-09.png",
+        img: "deck-slides/loom-poster.jpg",
         pdf: "deck-slides/slide-09.pdf",
-        notes: `Screenshots from the live production app:\n1. Client checks sets (Workout logging flow)\n2. Sent to the trainer (Confirmation screen)\n3. Trainer approves (Reviewing client's words; knee pain held the squat)\n4. Check-ins drafted (Trainer Assistant feed for clients needing attention).`
+        embed: "https://www.loom.com/embed/4709adb2417d468ba6cc09bae4458201?autoplay=1",
+        notes: `This slide plays the Loom walkthrough. It starts when you arrive. Use the arrow keys to move on.\n\nThe on-screen arrows still work if the video player has taken the keyboard.`
       },
       {
         num: 10,
@@ -400,6 +420,8 @@
     const total = slides.length;
 
     const imgEl = document.getElementById("current-slide-img");
+    const videoEl = document.getElementById("current-slide-video");
+    const embedEl = document.getElementById("current-slide-embed");
     const counterEl = document.getElementById("slide-num");
     const progressEl = document.getElementById("progress-bar");
     const notesTitleEl = document.getElementById("notes-title");
@@ -418,8 +440,30 @@
 
     function updateSlide() {
       const s = slides[currentIndex];
-      imgEl.src = s.img;
-      imgEl.alt = `Slide ${s.num}: ${s.title}`;
+      // Stop whatever was playing on the previous slide before showing the next one.
+      videoEl.pause();
+      embedEl.src = "about:blank";
+      if (s.embed) {
+        imgEl.style.display = "none";
+        videoEl.style.display = "none";
+        videoEl.removeAttribute("src");
+        embedEl.style.display = "block";
+        embedEl.src = s.embed;
+      } else if (s.video) {
+        embedEl.style.display = "none";
+        imgEl.style.display = "none";
+        videoEl.style.display = "block";
+        if (videoEl.getAttribute("src") !== s.video) videoEl.src = s.video;
+        videoEl.currentTime = 0;
+        videoEl.play().catch(() => {});
+      } else {
+        embedEl.style.display = "none";
+        videoEl.removeAttribute("src");
+        videoEl.style.display = "none";
+        imgEl.style.display = "block";
+        imgEl.src = s.img;
+        imgEl.alt = `Slide ${s.num}: ${s.title}`;
+      }
       counterEl.textContent = `${s.num} / ${total}`;
       progressEl.style.width = `${((currentIndex + 1) / total) * 100}%`;
       notesTitleEl.textContent = `Slide ${s.num}: ${s.title}`;
@@ -481,6 +525,12 @@
 
     // Keyboard navigation
     window.addEventListener("keydown", (e) => {
+      if (e.key === " " && slides[currentIndex].video && !videoEl.ended) {
+        e.preventDefault();
+        if (videoEl.paused) videoEl.play();
+        else videoEl.pause();
+        return;
+      }
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
         e.preventDefault();
         nextSlide();

@@ -52,7 +52,7 @@ This directory contains the presentation deck materials for the Trainer Progress
    - Step-by-step walkthrough of a concrete bench press session where pain was reported:
      - 1. Client logs $\to$ 2. Workout Logger extracts $\to$ 3. Client checks $\to$ 4. Engine holds lift $\to$ 5. Planner flags safety $\to$ 6. Trainer approves.
 9. **Slide 9 — What we built: the whole loop, live**:
-   - Production screenshots showcasing the live end-to-end user experience.
+   - The Loom walkthrough plays in place of the old screenshot slide. In the browser deck it is the Loom player and starts when you arrive. The arrow keys move on. In PowerPoint or Keynote, start the slideshow and the same recording starts on this slide. A still picture means you are not in the slideshow yet; click it once.
 10. **Slide 10 — Where it stands: live and tested end to end**:
     - Live URL (`trainer-agent-app.vercel.app`), feature delivery status, production E2E test results (9 of 10 checks passed), and next steps.
 
@@ -64,11 +64,13 @@ This directory contains the presentation deck materials for the Trainer Progress
 Open `presentation/deck.pptx` directly in Microsoft PowerPoint, Apple Keynote, or upload to Google Slides.
 - Speaker notes are already pre-populated for each slide.
 - Layout is locked to 16:9 widescreen.
+- Slide 9 is the Loom walkthrough. Start the slideshow and it plays when you reach that slide. If you still see a still picture, click it once.
 
 ### Option B: Web Browser (Zero Setup)
 Open `presentation/slides.html` in Chrome, Safari, Edge, or Firefox.
-- **Next Slide**: `→`, `Space`, or `PageDown`
+- **Next Slide**: `→` or `PageDown` or `Space`
 - **Previous Slide**: `←` or `PageUp`
+- **Slide 9**: the Loom walkthrough plays on its own. Let it finish, then move on with the right arrow. If you click inside the player, use the on-screen arrows to leave the slide.
 - **Fullscreen Mode**: Press `F`
 - **Presenter Notes**: Press `N` (opens/closes speaker notes panel)
 - **Thumbnail Strip**: Press `T` (opens quick jump drawer)
