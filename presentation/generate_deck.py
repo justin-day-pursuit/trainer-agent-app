@@ -16,6 +16,10 @@ What this script does:
 """
 
 import os
+import shutil
+import subprocess
+import tempfile
+import zipfile
 from pptx import Presentation
 from pptx.util import Inches
 
@@ -146,11 +150,9 @@ SLIDE_DATA = [
         "title": "What we built: the whole loop, live",
         "notes": (
             "What we built: the whole loop, live\n\n"
-            "Screens from the live build with sample client data:\n"
-            "1. Client checks sets (Workout logging flow).\n"
-            "2. Sent to the trainer (Confirmation and rating).\n"
-            "3. Trainer approves: Reads client's actual words. Knee pain held the squat. One tap to approve and go live.\n"
-            "4. Check-ins drafted: For clients needing attention (Trainer Assistant feed)."
+            "This slide is the Loom walkthrough. It starts when the slideshow reaches this slide. "
+            "If you are still looking at the still picture, click it once.\n\n"
+            "PowerPoint cannot show the Loom web player, so this file contains the same recording."
         )
     },
     {
@@ -173,6 +175,96 @@ SLIDE_DATA = [
         )
     }
 ]
+
+
+def prepare_powerpoint_video(source_path):
+    """
+    Makes a copy of the walkthrough that PowerPoint and Keynote will play.
+
+    The original file is H.264 High. Some presentation apps open that file
+    and only show the still picture. This copy uses the older Baseline
+    picture style, keeps the sound, and puts the index at the front of the
+    file so playback can start immediately. The browser deck keeps using
+    the original file.
+    """
+    # Keep the real filename. PowerPoint uses it as the movie's name,
+    # and a random temp name can make the file look like a broken link.
+    dest_dir = tempfile.mkdtemp()
+    dest_path = os.path.join(dest_dir, "loom-walkthrough.mp4")
+    command = [
+        "ffmpeg", "-y", "-i", source_path,
+        "-c:v", "libx264", "-profile:v", "baseline", "-level", "3.1",
+        "-pix_fmt", "yuv420p", "-bf", "0", "-crf", "20", "-preset", "medium",
+        "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2",
+        "-movflags", "+faststart",
+        dest_path,
+    ]
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    return dest_path
+
+
+def make_embedded_video_playable(pptx_path):
+    """
+    Fixes the movie slide after python-pptx writes it.
+
+    The builder leaves the play action pointing at a blank link, so a click
+    does nothing and the still picture stays up. This removes that blank
+    link and tells the slideshow to start the video when the slide appears.
+    """
+    with zipfile.ZipFile(pptx_path, "r") as source:
+        slide_name = "ppt/slides/slide9.xml"
+        slide_xml = source.read(slide_name).decode("utf-8")
+        other_parts = [
+            item for item in source.infolist()
+            if item.filename != slide_name
+        ]
+        payloads = {item.filename: source.read(item.filename) for item in other_parts}
+
+    slide_xml = slide_xml.replace(' r:id=""', "")
+    # A full slideshow timeline is what PowerPoint and Keynote look for.
+    # The short one python-pptx writes never starts the movie.
+    play_on_open = (
+        "<p:timing><p:tnLst><p:par>"
+        '<p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot">'
+        '<p:childTnLst><p:seq concurrent="1" nextAc="seek">'
+        '<p:cTn id="2" dur="indefinite" nodeType="mainSeq"><p:childTnLst><p:par>'
+        '<p:cTn id="3" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst>'
+        "<p:childTnLst><p:video><p:cMediaNode vol=\"80000\">"
+        '<p:cTn id="4" fill="hold" display="0">'
+        '<p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn>'
+        '<p:tgtEl><p:spTgt spid="2"/></p:tgtEl>'
+        "</p:cMediaNode></p:video></p:childTnLst></p:cTn></p:par></p:childTnLst></p:cTn>"
+        '<p:prevCondLst><p:cond evt="onPrev" delay="0">'
+        "<p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:prevCondLst>"
+        '<p:nextCondLst><p:cond evt="onNext" delay="0">'
+        "<p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:nextCondLst>"
+        "</p:seq></p:childTnLst></p:cTn></p:par></p:tnLst></p:timing>"
+    )
+    start = slide_xml.find("<p:timing>")
+    end = slide_xml.find("</p:timing>")
+    if start != -1 and end != -1:
+        slide_xml = slide_xml[:start] + play_on_open + slide_xml[end + len("</p:timing>"):]
+    if "xmlns:p14=" not in slide_xml.split(">", 1)[0]:
+        slide_xml = slide_xml.replace(
+            'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"',
+            'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+            'xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main"',
+            1,
+        )
+
+    temp_path = pptx_path + ".tmp"
+    with zipfile.ZipFile(temp_path, "w") as rebuilt:
+        for item in other_parts:
+            # Copy each existing part as-is, including the video, so the
+            # repair only changes the slide that holds the play button.
+            copied = zipfile.ZipInfo(filename=item.filename, date_time=item.date_time)
+            copied.compress_type = item.compress_type
+            copied.external_attr = item.external_attr
+            rebuilt.writestr(copied, payloads[item.filename])
+        slide_info = zipfile.ZipInfo(filename=slide_name)
+        slide_info.compress_type = zipfile.ZIP_DEFLATED
+        rebuilt.writestr(slide_info, slide_xml.encode("utf-8"))
+    shutil.move(temp_path, pptx_path)
 
 
 def create_powerpoint_presentation():
@@ -201,15 +293,37 @@ def create_powerpoint_presentation():
             continue
             
         slide = prs.slides.add_slide(blank_layout)
-        
-        # Place high-resolution slide image covering full slide
-        slide.shapes.add_picture(
-            img_path,
-            left=Inches(0),
-            top=Inches(0),
-            width=prs.slide_width,
-            height=prs.slide_height
-        )
+
+        # Slide 9 is the walkthrough. The movie fills the slide. The still
+        # picture is what shows until the slideshow starts the video.
+        video_path = os.path.join(base_dir, "loom-walkthrough.mp4")
+        poster_path = os.path.join(slides_dir, "loom-poster.jpg")
+        compatible_video = None
+        if num == 9 and os.path.exists(video_path):
+            try:
+                compatible_video = prepare_powerpoint_video(video_path)
+                movie_path = compatible_video
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                movie_path = video_path
+            slide.shapes.add_movie(
+                movie_path,
+                left=Inches(0),
+                top=Inches(0),
+                width=prs.slide_width,
+                height=prs.slide_height,
+                poster_frame_image=poster_path if os.path.exists(poster_path) else img_path,
+                mime_type="video/mp4",
+            )
+            if compatible_video and os.path.exists(compatible_video):
+                shutil.rmtree(os.path.dirname(compatible_video), ignore_errors=True)
+        else:
+            slide.shapes.add_picture(
+                img_path,
+                left=Inches(0),
+                top=Inches(0),
+                width=prs.slide_width,
+                height=prs.slide_height
+            )
         
         # Add presenter speaker notes
         notes_slide = slide.notes_slide
@@ -220,6 +334,9 @@ def create_powerpoint_presentation():
         
     out_pptx = os.path.join(base_dir, "deck.pptx")
     prs.save(out_pptx)
+    # python-pptx saves a movie that looks right but will not start. This
+    # pass repairs the play action so the slideshow actually runs the video.
+    make_embedded_video_playable(out_pptx)
     print(f"\nSuccessfully saved PowerPoint presentation to: {out_pptx}")
 
 
