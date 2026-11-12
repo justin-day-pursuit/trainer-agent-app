@@ -15,6 +15,7 @@ This directory contains the presentation deck materials for the Trainer Progress
 | **Original Deck** | `presentation/deck.pdf` | Original 10-page master PDF. |
 | **Diagrams** | `presentation/diagrams/` | Standalone high-resolution PNG, PDF, and HTML source for the system architecture and agent workflow loop diagrams. |
 | **Promo Video** | `presentation/promo-video.mp4` | 1:29 opener with music, built from captured app screens (sample data). The live-site demo is recorded separately in Loom. |
+| **Promo Poster** | `presentation/deck-slides/promo-poster.png` | 1920×1080 promotional video poster with play button overlay and duration badge for README and web embedding. |
 
 ---
 
